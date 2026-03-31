@@ -9,6 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@teachablemachine/image": "^0.8.5",
+    "@tensorflow-models/speech-commands": "^0.5.4",
+    "@tensorflow/tfjs": "^4.22.0",
+    "axios": "^1.13.6",
     "next": "16.2.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
