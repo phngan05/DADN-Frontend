@@ -7,17 +7,14 @@ export default function VoiceRecognition() {
     const [predictions, setPredictions] = useState([]);
     const [status, setStatus] = useState("Đang tải thư viện...");
 
-    // Đường dẫn model trong thư mục public/voice_model/
     const MODEL_URL = "/voice_model/"; 
 
     useEffect(() => {
         const loadScriptsAndModel = async () => {
             try {
-                // 1. Tải thư viện từ CDN (giống hệt các thẻ <script> trong mẫu của bạn)
                 await loadExternalScript("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js");
                 await loadExternalScript("https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js");
 
-                // 2. Khởi tạo model sau khi script đã load xong
                 const origin = window.location.origin;
                 const checkpointURL = origin + MODEL_URL + "model.json";
                 const metadataURL = origin + MODEL_URL + "metadata.json";
@@ -40,13 +37,11 @@ export default function VoiceRecognition() {
 
         loadScriptsAndModel();
 
-        // Dọn dẹp khi đóng trang
         return () => {
             if (recognizer) recognizer.stopListening();
         };
     }, []);
 
-    // Hàm load script thủ công để tránh lỗi 'fs' của Webpack/Turbopack
     const loadExternalScript = (src) => {
         return new Promise((resolve) => {
             if (document.querySelector(`script[src="${src}"]`)) return resolve();
@@ -67,21 +62,18 @@ export default function VoiceRecognition() {
             const classLabels = recognizer.wordLabels();
             const scores = result.scores;
             
-            // Chuyển kết quả thành mảng để hiển thị React Map
             const currentPredictions = classLabels.map((label, i) => ({
                 className: label,
                 probability: scores[i]
             }));
             setPredictions(currentPredictions);
 
-            // LOGIC TỰ TẮT KHI > 70% (Như bạn yêu cầu ở các câu trước)
             const bestMatch = currentPredictions.reduce((prev, current) => 
                 (prev.probability > current.probability) ? prev : current
             );
 
             if (bestMatch.probability > 0.70 && bestMatch.className !== "_background_noise_") {
                 setStatus(`🔓 Đã nhận diện: ${bestMatch.className}`);
-                // Dừng mic
                 setTimeout(() => {
                     recognizer.stopListening();
                     setIsListening(false);
