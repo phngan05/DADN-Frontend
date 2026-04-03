@@ -8,6 +8,9 @@ export default function RegisterPage() {
     full_name: "",
     username: "",
     password: "",
+    adafruit_username: "",
+    adafruit_api_key: "",
+
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -67,6 +70,22 @@ export default function RegisterPage() {
             required
             className="w-full rounded-md border border-gray-300 p-3 focus:border-green-500 focus:outline-none"
             placeholder="Mật khẩu (ít nhất 8 ký tự)"
+            onChange={handleChange}
+          />
+          <input
+            name="adafruit_username"
+            type="text"
+            required
+            className="w-full rounded-md border border-gray-300 p-3 focus:border-green-500 focus:outline-none"
+            placeholder="Adafruit Username"
+            onChange={handleChange}
+          />
+          <input
+            name="adafruit_api_key"
+            type="password"
+            required
+            className="w-full rounded-md border border-gray-300 p-3 focus:border-green-500 focus:outline-none"
+            placeholder="API Key của Adafruit"
             onChange={handleChange}
           />
 

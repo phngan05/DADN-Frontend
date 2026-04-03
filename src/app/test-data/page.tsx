@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import apiClient from "@/src/services/api";
-
+import { useRouter } from "next/navigation";
 export default function TestData() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -15,12 +16,23 @@ export default function TestData() {
       }
 
       try {
-        const res = await apiClient.get("records/all", {
+        const res = await apiClient.get("record/all", {
           headers: { Authorization: `Bearer ${token}` },
         });
+        // const updateRes = await apiClient.put("record/", {
+        //   feed_key: "led",
+        //   value: "1"
+        // }, {
+        //   headers: { Authorization: `Bearer ${token}` },
+        // });
         setData(res.data);
+        // console.log("Update response:", updateRes.data);
       } catch (err) {
-        setError("Lỗi lấy dữ liệu: " + (err.response?.status === 401 ? "Token hết hạn" : "Lỗi server"));
+        if (err.response?.status === 401) {
+          alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+          localStorage.removeItem("token");
+          router.push("/login");
+        }
       }
     };
 
