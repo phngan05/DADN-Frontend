@@ -27,7 +27,7 @@ export default function LoginPage() {
       );
 
       localStorage.setItem("token", response.data.access_token);
-      
+      localStorage.setItem("userId", response.data.user_id);
       alert("Đăng nhập thành công!");
       router.push("/test-data"); 
     } catch (err) {

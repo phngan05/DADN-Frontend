@@ -1,58 +1,40 @@
+// app/dashboard/page.js
 "use client";
 import { useEffect, useState } from "react";
 import apiClient from "@/src/services/api";
-import { useRouter } from "next/navigation";
-export default function TestData() {
-  const [data, setData] = useState(null);
-  const [error, setError] = useState("");
-  const router = useRouter();
+import { userAgent } from "next/server";
+export default function Dashboard() {
+  const [sensorData, setSensorData] = useState({humidity: null, temperature: null});
+  const userId = localStorage.getItem("userId");
 
   useEffect(() => {
-    const fetchData = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        setError("Bạn chưa đăng nhập!");
-        return;
-      }
+    const baseURL = apiClient.defaults.baseURL; 
 
-      try {
-        const res = await apiClient.get("record/all", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        // const updateRes = await apiClient.put("record/", {
-        //   feed_key: "led",
-        //   value: "1"
-        // }, {
-        //   headers: { Authorization: `Bearer ${token}` },
-        // });
-        setData(res.data);
-        // console.log("Update response:", updateRes.data);
-      } catch (err) {
-        if (err.response?.status === 401) {
-          alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-          localStorage.removeItem("token");
-          router.push("/login");
-        }
-      }
+    // Chuyển đổi http -> ws và loại bỏ phần /api nếu cần
+    const wsURL = baseURL.replace("http", "ws").replace("/api", "/ws");
+
+    console.log("Kết nối WebSocket tới:", `${wsURL}/${userId}`);
+    // Sử dụng trong useEffect
+    const socket = new WebSocket(`${wsURL}/${userId}`);
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log("Dữ liệu mới từ WebSocket:", data);
+      
+      // Cập nhật state để giao diện thay đổi tức thì
+      setSensorData(prev => ({
+        ...prev,
+        [data.feed]: data.value
+      }));
     };
 
-    fetchData();
-  }, []);
-
-  if (error) return <div className="p-10 text-red-500">{error}</div>;
+    return () => socket.close(); // Đóng khi rời trang
+  }, [userId]);
 
   return (
-    <div className="p-10">
-      <h1 className="text-2xl font-bold mb-4">Dữ liệu từ Adafruit (Dành cho User đã Login)</h1>
-      <pre className="bg-gray-800 text-green-400 p-5 rounded-lg">
-        {data ? JSON.stringify(data, null, 2) : "Đang tải..."}
-      </pre>
-      <button 
-        onClick={() => { localStorage.removeItem("token"); window.location.href="/login"; }}
-        className="mt-5 bg-red-500 text-white px-4 py-2 rounded"
-      >
-        Đăng xuất
-      </button>
+    <div>
+      <h1>Nhiệt độ: {sensorData.temperature || "--"} °C</h1>
+      <h1>Độ ẩm: {sensorData.humidity || "--"} %</h1>
     </div>
   );
 }
