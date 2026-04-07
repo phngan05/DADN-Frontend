@@ -16,7 +16,6 @@ export default function LoginPage() {
     setError("");
 
     try {
-      // FastAPI yêu cầu OAuth2 dùng FormData
       const formData = new FormData();
       formData.append("username", username);
       formData.append("password", password);
