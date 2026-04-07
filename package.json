@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@teachablemachine/image": "^0.8.5",
-    "@tensorflow-models/speech-commands": "^0.5.4",
     "@tensorflow/tfjs": "^1.3.1",
     "axios": "^1.13.6",
     "next": "16.2.0",
