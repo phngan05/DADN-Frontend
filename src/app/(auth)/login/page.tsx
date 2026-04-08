@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import apiClient from "@/src/services/api";
+import { login } from "@/src/services/auth";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -16,21 +16,10 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const formData = new FormData();
-      formData.append("username", username);
-      formData.append("password", password);
-
-      const response = await apiClient.post(
-        "/auth/login", 
-        formData
-      );
-
-      localStorage.setItem("token", response.data.access_token);
-      localStorage.setItem("userId", response.data.user_id);
-      alert("Đăng nhập thành công!");
-      router.push("/test-data"); 
+      const data = await login(username, password);
+      router.push("/test-data");
     } catch (err) {
-      setError(err.response?.data?.detail || "Sai tài khoản hoặc mật khẩu");
+      setError("Đăng nhập thất bại");
     } finally {
       setLoading(false);
     }

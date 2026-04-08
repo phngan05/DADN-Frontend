@@ -2,34 +2,56 @@
 "use client";
 import { useEffect, useState } from "react";
 import apiClient from "@/src/services/api";
-import { userAgent } from "next/server";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 export default function Dashboard() {
   const [sensorData, setSensorData] = useState({humidity: null, temperature: null});
-  const userId = localStorage.getItem("userId");
-
+  const userId = Cookies.get("userId");
+  const token = Cookies.get("token"); // Giả sử userId được lưu trong cookie sau khi đăng nhập
+  const router = useRouter();
+  
   useEffect(() => {
-    const baseURL = apiClient.defaults.baseURL; 
+    let socket;
 
-    // Chuyển đổi http -> ws và loại bỏ phần /api nếu cần
-    const wsURL = baseURL.replace("http", "ws").replace("/api", "/ws");
+    const initDashboard = async () => {
+      try {
+        if (!token) {
+          router.push("/login");
+          return;
+        }
 
-    console.log("Kết nối WebSocket tới:", `${wsURL}/${userId}`);
-    // Sử dụng trong useEffect
-    const socket = new WebSocket(`${wsURL}/${userId}`);
+        // 1. "Đánh thức" MQTT session ở Backend trước
+        console.log("Kích hoạt MQTT session...");
+        await apiClient.get(`/record/all`);
 
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log("Dữ liệu mới từ WebSocket:", data);
-      
-      // Cập nhật state để giao diện thay đổi tức thì
-      setSensorData(prev => ({
-        ...prev,
-        [data.feed]: data.value
-      }));
+        // 2. Sau khi API /all thành công, mới bắt đầu kết nối WebSocket
+        const baseURL = apiClient.defaults.baseURL;
+        const wsURL = baseURL.replace("http", "ws").replace("/api", "/ws");
+        
+        socket = new WebSocket(`${wsURL}/${userId}`);
+
+        socket.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          setSensorData(prev => ({
+            ...prev,
+            [data.feed]: data.value
+          }));
+        };
+
+        socket.onopen = () => console.log("WebSocket đã mở");
+        socket.onerror = (err) => console.error("Lỗi WebSocket:", err);
+
+      } catch (error) {
+        console.error("Lỗi khởi tạo Dashboard:", error);
+      }
     };
 
-    return () => socket.close(); // Đóng khi rời trang
-  }, [userId]);
+    initDashboard();
+
+    return () => {
+      if (socket) socket.close();
+    };
+  }, [token, userId, router]); // Thêm token vào dependency
 
   return (
     <div>
