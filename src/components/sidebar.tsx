@@ -1,23 +1,37 @@
-import { LayoutDashboard, ScanFace, Settings, Mic, LogOut } from "lucide-react";
-
-interface SidebarProps {
-  dashboardActive?: boolean;
-  faceManagementActive?: boolean;
-  settingActive?: boolean;
-}
-
-export default function Sidebar({ dashboardActive, faceManagementActive, settingActive }: SidebarProps) {
+import { LayoutDashboard, ScanFace, Settings, Mic, LogOut, Zap } from "lucide-react";
+import { usePathname, useRouter } from 'next/navigation';
+import { logout } from "../services/auth";
+export default function Sidebar() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const isSettingActive = pathname === '/setting';
+  const isDashboardActive = pathname === '/';
+  const isFaceManagementActive = pathname === '/face-management';
   const menuItems = [
-    { icon: <LayoutDashboard size={20} />, label: "Dashboard", active: dashboardActive ?? false },
-    { icon: <ScanFace size={20} />, label: "Face Management", active: faceManagementActive ?? false },
-    { icon: <Settings size={20} />, label: "Setting", active: settingActive ?? false },
+    { icon: <LayoutDashboard size={20} />, label: "Dashboard", active: isDashboardActive },
+    { icon: <ScanFace size={20} />, label: "Face Management", active: isFaceManagementActive },
+    { icon: <Settings size={20} />, label: "Setting", active: isSettingActive },
   ];
+  const handleChangeTab = (label: string) => {
+    switch (label) {
+      case "Dashboard":
+        router.push("/");
+        break;
+      case "Face Management":
+        router.push("/face-management");
+        break;
+      case "Setting":
+        router.push("/setting");
+        break;
+    }
+  };
+
 
   return (
     <aside className="w-64 bg-white h-screen flex flex-col p-6 border-r border-gray-100">
       <div className="flex items-center gap-2 mb-10 px-2">
         <div className="bg-blue-600 p-1.5 rounded-full text-white">
-          <span className="font-bold text-xl">⚡</span>
+          <Zap size={16} />
         </div>
         <h1 className="font-bold text-xl text-blue-900">COMHOME</h1>
       </div>
@@ -31,6 +45,7 @@ export default function Sidebar({ dashboardActive, faceManagementActive, setting
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                 item.active ? "primary shadow-lg shadow-blue-200" : "text-gray-500 hover:bg-gray-50"
               }`}
+              onClick={() => handleChangeTab(item.label)}
             >
               {item.icon}
               <span className="font-medium text-sm">{item.label}</span>
@@ -44,7 +59,10 @@ export default function Sidebar({ dashboardActive, faceManagementActive, setting
           <Mic size={18} />
           <span className="font-medium">Voice Control</span>
         </button>
-        <button className="w-full flex items-center gap-3 px-4 py-2 text-gray-500 hover:text-red-500 transition-colors">
+        <button 
+        className="w-full flex items-center gap-3 px-4 py-2 text-gray-500 hover:text-red-500 transition-colors"
+        onClick={logout}
+        >
           <LogOut size={18} />
           <span className="font-medium text-sm">Log out</span>
         </button>
