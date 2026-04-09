@@ -20,7 +20,11 @@
     --foreground: #ededed;
   }
 }
-
+@layer base {
+  button {
+    cursor: pointer;
+  }
+}
 .primary {
   background-color: var(--primary-color);
   color: #ffffff;
