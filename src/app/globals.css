@@ -24,6 +24,10 @@
   button {
     cursor: pointer;
   }
+  input::placeholder {
+    color: gray;
+    opacity: 0.3;
+  }
 }
 .primary {
   background-color: var(--primary-color);
@@ -32,9 +36,21 @@
 .button-primary {
   background-color: var(--primary-color);
   color: #ffffff;
+  border-radius: 0.75rem;
+    
+  /* text-sm */
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  
+  /* font-semibold */
+  font-weight: 600;
 }
 .button-primary:hover {
   background-color: #1e40af;
+}
+.button-primary:active {
+  background-color: #1e40af;
+  transform: scale(0.98);
 }
 body {
   background: var(--background);

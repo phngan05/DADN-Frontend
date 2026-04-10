@@ -1,26 +1,48 @@
 "use client";
 import Sidebar from "@/src/components/sidebar";
 import Header from "@/src/components/header";
+import apiClient from "@/src/services/api";
+import { useEffect} from "react";
+import { useUser } from "@/src/hooks/useUser";
+import UserContext from "@/src/context/userContext";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
+  const {userData, setUserData, updateUserData, loading, error, refreshUser} = useUser();
+
+  useEffect(() => {
+    const initMQTTSession = async () => {
+      try {
+        // Awake MQTT session by making a request to the backend
+        console.log("Kích hoạt MQTT session...");
+        await apiClient.get(`/record/all`);
+
+      } catch (error) {
+        console.error("Initiate MQTT session failed:", error);
+      }
+    };
+    initMQTTSession();
+  }, []);
+  
   return (
+    <UserContext.Provider value={{ userData, setUserData, updateUserData, loading, error, refreshUser }}>
     <div className="flex h-screen overflow-hidden bg-slate-50 text-slate-900">
-      {/* Sidebar cố định bên trái */}
+      {/* Fixed Sidebar */}
       <aside className="w-64 h-screen sticky top-0 flex-shrink-0 border-r bg-white z-20">
         <Sidebar />
       </aside>
 
       <div className="flex flex-col flex-1 min-w-0">
-        {/* Header cố định phía trên */}
+        {/* Fixed Header */}
         <header className="h-16 sticky top-0 z-10 border-b bg-white/80 backdrop-blur-md flex-shrink-0">
-          <Header />
+          <Header/>
         </header>
 
-        {/* Nội dung thay đổi theo từng trang */}
+        {/* Page Content */}
         <main className="flex-1 overflow-y-auto bg-slate-50">
           {children}
         </main>
       </div>
     </div>
+    </UserContext.Provider>
   );
 }

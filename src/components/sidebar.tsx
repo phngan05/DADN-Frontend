@@ -1,6 +1,8 @@
 import { LayoutDashboard, ScanFace, Settings, Mic, LogOut, Zap } from "lucide-react";
 import { usePathname, useRouter } from 'next/navigation';
+import { useState } from "react";
 import { logout } from "../services/auth";
+import VoiceControlModal from "./voice";
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -12,6 +14,7 @@ export default function Sidebar() {
     { icon: <ScanFace size={20} />, label: "Face Management", active: isFaceManagementActive },
     { icon: <Settings size={20} />, label: "Setting", active: isSettingActive },
   ];
+  const [isVoiceOpen, setIsVoiceOpen] = useState(false);
   const handleChangeTab = (label: string) => {
     switch (label) {
       case "Dashboard":
@@ -28,6 +31,7 @@ export default function Sidebar() {
 
 
   return (
+    <div >
     <aside className="w-64 bg-white h-screen flex flex-col p-6 border-r border-gray-100">
       <div className="flex items-center gap-2 mb-10 px-2">
         <div className="bg-blue-600 p-1.5 rounded-full text-white">
@@ -55,7 +59,9 @@ export default function Sidebar() {
       </div>
 
       <div className="space-y-4">
-        <button className="w-full primary flex items-center justify-center gap-2 py-3 rounded-2xl shadow-md">
+        <button
+        onClick={() => setIsVoiceOpen(true)}
+        className="w-full primary flex items-center justify-center gap-2 py-3 rounded-3xl shadow-md">
           <Mic size={18} />
           <span className="font-medium">Voice Control</span>
         </button>
@@ -68,5 +74,12 @@ export default function Sidebar() {
         </button>
       </div>
     </aside>
+    
+      <VoiceControlModal 
+      isOpen={isVoiceOpen} 
+      onClose={() => setIsVoiceOpen(false)} 
+    />
+    </div>
+    
   );
 }

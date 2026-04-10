@@ -1,25 +1,17 @@
 "use client";
 import SettingInput from "@/src/components/setting-input";
 import UserPhoto from "@/src/components/user-photo";
-import apiClient from "@/src/services/api";
 import { Settings as SettingIcon, User as UserIcon, CloudSync, Camera, Plus, Thermometer, Droplet, Sun, Siren, Fan, Lightbulb } from "lucide-react";
+import ProvisionFeedModal from "@/src/components/add-new-feed";
+import { useFeeds } from "@/src/hooks/useFeeds";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useUserContext } from "@/src/context/userContext";
 import { User } from "@/src/types/user";
-import { Adafruit, Feed, FeedResponse } from "@/src/types/feed";
-import Cookies from "js-cookie";
 
 export default function SettingPage() {
-    const router = useRouter();
-    const [userData, setUserData] = useState<User>({ 
-        user_id: "", 
-        full_name: "", 
-        username: "" ,
-        photo_url: null, 
-    });
-    const [adafruitData, setAdafruitData] = useState<Adafruit | null>(null);
-    const [feedsData, setFeedsData] = useState<Feed[] | null>(null);
-    const [loading, setLoading] = useState(true);
+    const { userData, setUserData, updateUserData, loading } = useUserContext();
+    const [editedUserData, setEditedUserData] = useState<User>(userData);
+    const { feedsData, adafruitData, addNewFeed } = useFeeds();
     const feedIcons: Record<string, React.ReactNode> = {
         "Temperature": <Thermometer size={18} className="text-red-500" />,
         "Humidity": <Droplet size={18} className="text-blue-300" />,
@@ -28,58 +20,24 @@ export default function SettingPage() {
         "Fan Speed": <Fan size={18} className="text-blue-700" />,
         "LED Status": <Lightbulb size={18} className="text-yellow-500" />,
     };
-    useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const token = Cookies.get("token");
-                if (!token){
-                    router.push("/login");
-                    return;
-                }
-                const [userRes, feedsRes] = await Promise.all([
-                    apiClient.get<User>("/user"),
-                    apiClient.get<FeedResponse[]>("/feed")
-                ]);
-                console.log("User Data:", userRes.data);
-                console.log("Feeds Data:", feedsRes.data);
-                setUserData(userRes.data);
-                setFeedsData(feedsRes.data.map((feed) => ({
-                    feed_id: feed.feed_id,
-                    feed_key: feed.feed_key,
-                    category: feed.category
-                })));
-                setAdafruitData(feedsRes.data[0]?.ADAFRUIT_SERVER? {
-                    server_id: feedsRes.data[0].ADAFRUIT_SERVER.server_id,
-                    username: feedsRes.data[0].ADAFRUIT_SERVER.username
-                } : null);
-            } catch (error) {
-                console.error("Error fetching user data:", error);
-            }finally {
-                setLoading(false);
-            }
-        };
-        fetchUserData();
-    }, [router]);
+    const [isProvisionOpen, setIsProvisionOpen] = useState(false);
 
     const handleUpdateUser = async () => {
-        try {
-            console.log("Updating user with data:", {
-                full_name: userData.full_name,
-                username: userData.username,
-                photo_url: userData.photo_url,
-            });
-            await apiClient.put(`/user`, {
-                full_name: userData.full_name,
-                username: userData.username,
-                photo_url: userData.photo_url,
-            });
-            alert("User information updated successfully!");
-        } catch (error) {
-            console.error("Error updating user data:", error);
-            alert("Failed to update user information. Please try again.");
-        }
+        setUserData(editedUserData);
+        await updateUserData();
     };
-    return (    
+    const handleProvision = async (data: { type: string; key: string }) => {
+        await addNewFeed(data);
+        setIsProvisionOpen(false);
+    };
+    useEffect(() => {
+        if (userData) {
+            setEditedUserData(userData);
+        }
+    }, [userData]);
+
+    return (
+        <div>  
         <div className="flex-1 overflow-y-auto p-10 bg-slate-50">
             <div className="max-w-6xl mx-auto">
                 <div className="mb-8">
@@ -91,7 +49,7 @@ export default function SettingPage() {
                     {/* Profile Card */}
                     <div className="col-span-2 bg-white p-6 rounded-3xl flex gap-6 items-center shadow-sm border border-slate-100">
                         <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
-                            <UserPhoto src={userData.photo_url} />
+                            <UserPhoto src={editedUserData.photo_url} />
                             <button className="absolute bottom-1 right-1 button-primary p-1.5 rounded-lg shadow-lg">
                                 <Camera size={12} />
                             </button>
@@ -101,7 +59,7 @@ export default function SettingPage() {
                                 <SettingInput 
                                     label="Full Name"
                                     value={userData?.full_name}
-                                    onChange={(e) => setUserData(prev => ({ ...prev, full_name: e.target.value }))}
+                                    onChange={(e) => setEditedUserData(prev => ({ ...prev, full_name: e.target.value }))}
                                     isLoading={loading}
                                     uniqueKey={userData?.user_id}
                                 />
@@ -111,7 +69,7 @@ export default function SettingPage() {
                                 <SettingInput
                                     label="User Name"
                                     value={userData?.username}
-                                    onChange={(e) => setUserData(prev => ({ ...prev, username: e.target.value }))}
+                                    onChange={(e) => setEditedUserData(prev => ({ ...prev, username: e.target.value }))}
                                     isLoading={loading}
                                     uniqueKey={userData?.user_id}
                                 />
@@ -120,7 +78,7 @@ export default function SettingPage() {
                             <div className="flex justify-end items-center mt-2 pt-2 border-t border-slate-50">
                                 <button 
                                 onClick={() => handleUpdateUser()}
-                                className="button-primary px-6 py-2 rounded-xl text-sm font-semibold transition-colors">
+                                className="button-primary px-6 py-2">
                                     Update
                                 </button>
                             </div>
@@ -154,7 +112,9 @@ export default function SettingPage() {
                 <div className="bg-white/60 p-8 rounded-[32px] backdrop-blur-sm border border-white shadow-sm mb-10">
                     <div className="flex justify-between items-center mb-6">
                         <h3 className="font-bold text-slate-800">Adafruit Feed Setting</h3>
-                        <button className="text-blue-600 flex items-center gap-1 text-xs font-bold hover:underline">
+                        <button 
+                            onClick={() => setIsProvisionOpen(true)}
+                            className="text-blue-600 flex items-center gap-1 text-xs font-bold hover:underline">
                             <Plus size={16} /> Provision New Feed
                         </button>
                     </div>
@@ -170,11 +130,18 @@ export default function SettingPage() {
                                     </div>
                                 </div>
                                 <button className="text-slate-300 hover:text-blue-600 transition-colors"><SettingIcon size={18} /></button>
+                                
                             </div>
                         ))}
                     </div>
                 </div>
             </div>
+        </div>
+        <ProvisionFeedModal 
+            isOpen={isProvisionOpen} 
+            onClose={() => setIsProvisionOpen(false)}
+            onComplete={handleProvision}
+            />
         </div>
     );
 }
