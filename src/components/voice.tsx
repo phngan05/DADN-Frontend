@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 
 import { X, Mic } from "lucide-react";
 import { useDeviceControl } from '@/src/hooks/useDeviceControl';
+import { useFeeds } from '../hooks/useFeeds';
 
 declare global {
   interface Window {
@@ -21,25 +22,28 @@ export default function VoiceControlModal({ isOpen, onClose }: VoiceControlModal
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState("");
     const { updateStatus, loading } = useDeviceControl();
+    const { feedsData} = useFeeds();
+    const ledStatusFeed = feedsData?.find(feed => feed.category === "LED Status");
+    const fanSpeedFeed = feedsData?.find(feed => feed.category === "Fan Speed");
     const recognitionRef = useRef<any>(null);
     const processCommandRef = useRef<(cmd: string) => Promise<void>>(async () => {});
 
     useEffect(() => {
         processCommandRef.current = async (command: string) => {
             if (command.includes("bật đèn") || command.includes("mở đèn")) {
-                await updateStatus("led-status", 1);
+                await updateStatus(ledStatusFeed?.feed_key, 1);
                 alert("Turn on light successfully!");
             } 
             else if (command.includes("tắt đèn")) {
-                await updateStatus("led-status", 0);
+                await updateStatus(ledStatusFeed?.feed_key, 0);
                 alert("Turn off light successfully!");
             }
             else if (command.includes("bật quạt") || command.includes("mở quạt")) {
-                await updateStatus("mini-fan", 70);
+                await updateStatus(fanSpeedFeed?.feed_key, 70);
                 alert("Turn on fan successfully!");
             }
             else if (command.includes("tắt quạt")) {
-                await updateStatus("mini-fan", 0);
+                await updateStatus(fanSpeedFeed?.feed_key, 0);
                 alert("Turn off fan successfully!");
             }
         };
@@ -76,7 +80,8 @@ export default function VoiceControlModal({ isOpen, onClose }: VoiceControlModal
 
     const toggleListen = () => {
         if (isListening) {
-        recognitionRef.current?.stop();
+            setIsListening(false);
+            recognitionRef.current?.stop();
         } else {
             setTranscript("");
             setIsListening(true);

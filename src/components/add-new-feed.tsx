@@ -14,7 +14,7 @@ export default function ProvisionFeedModal({
   onClose,
   onComplete,
 }: ProvisionFeedModalProps) {
-    const [feedType, setFeedType] = useState("LED Switch");
+    const [feedType, setFeedType] = useState("Temperature");
     const [feedKey, setFeedKey] = useState("");
     const feedOptions = ["Temperature", "Humidity", "Illuminance", "LED Intensity", "Fan Speed", "LED Status"];
     if (!isOpen) return null;

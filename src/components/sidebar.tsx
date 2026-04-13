@@ -1,4 +1,4 @@
-import { LayoutDashboard, ScanFace, Settings, Mic, LogOut, Zap } from "lucide-react";
+import { LayoutDashboard, ScanFace, Settings, Mic, LogOut, Zap, DoorOpen } from "lucide-react";
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from "react";
 import { logout } from "../services/auth";
@@ -28,7 +28,14 @@ export default function Sidebar() {
         break;
     }
   };
-
+  const handleOpenDoor = () => {
+    const password = prompt("Enter password:");
+    if (password === "comhome") {
+      alert("Door opened successfully!");
+    } else {
+      alert("Incorrect password. Access denied.");
+    }
+  };
 
   return (
     <div >
@@ -59,6 +66,12 @@ export default function Sidebar() {
       </div>
 
       <div className="space-y-4">
+        <button
+        onClick={() => handleOpenDoor()}
+        className="w-full primary flex items-center justify-center gap-2 py-3 rounded-3xl shadow-md">
+          <DoorOpen size={18} />
+          <span className="font-medium">Open Door</span>
+        </button>
         <button
         onClick={() => setIsVoiceOpen(true)}
         className="w-full primary flex items-center justify-center gap-2 py-3 rounded-3xl shadow-md">

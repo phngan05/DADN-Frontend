@@ -11,7 +11,8 @@ import { User } from "@/src/types/user";
 export default function SettingPage() {
     const { userData, setUserData, updateUserData, loading } = useUserContext();
     const [editedUserData, setEditedUserData] = useState<User>(userData);
-    const { feedsData, adafruitData, addNewFeed } = useFeeds();
+    const { feedsData, adafruitData, addNewFeed, updateFeeds, deleteFeed, refreshFeeds } = useFeeds();
+    const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
     const feedIcons: Record<string, React.ReactNode> = {
         "Temperature": <Thermometer size={18} className="text-red-500" />,
         "Humidity": <Droplet size={18} className="text-blue-300" />,
@@ -27,8 +28,32 @@ export default function SettingPage() {
         await updateUserData();
     };
     const handleProvision = async (data: { type: string; key: string }) => {
-        await addNewFeed(data);
-        setIsProvisionOpen(false);
+        const response = await addNewFeed({ type: data.type, key: data.key });
+        if (response) {
+            alert(`Feed "${data.type}" with key "${data.key}" has been provisioned!`);
+            setIsProvisionOpen(false);
+        }
+        else{
+            alert("Failed to provision feed. Please try again.");
+            setIsProvisionOpen(true);
+        }
+    };
+
+    const toggleDropdown = (id: string) => {
+        setOpenDropdownId(openDropdownId === id ? null : id);
+    };
+
+    const handleEditFeed = (feed: { feed_id: string; feed_key: string; category: string }) => {
+        const newKey = prompt("Enter new feed key:", feed.feed_key);
+        if (newKey && newKey.trim() !== "") {
+            updateFeeds({ ...feed, feed_key: newKey.trim() });
+        }
+    };
+    const handleDeleteFeed = (feed: { feed_id: string; feed_key: string; category: string }) => {
+        if (confirm(`Are you sure you want to delete feed "${feed.category}"?`)) {
+            deleteFeed(feed.feed_id);
+        }
+
     };
     useEffect(() => {
         if (userData) {
@@ -129,7 +154,40 @@ export default function SettingPage() {
                                         <p className="text-[10px] text-slate-400">Feed key: {feed.feed_key}</p>
                                     </div>
                                 </div>
-                                <button className="text-slate-300 hover:text-blue-600 transition-colors"><SettingIcon size={18} /></button>
+                                <div className="relative">
+                                    <button 
+                                        onClick={() => toggleDropdown(feed.feed_id)}
+                                        className={`p-2 rounded-lg transition-colors ${openDropdownId === feed.feed_id ? 'bg-blue-50 text-blue-600' : 'text-slate-300 hover:text-blue-600'}`}
+                                    >
+                                        <SettingIcon size={18} />
+                                    </button>
+
+                                    {/* Dropdown Menu */}
+                                    {openDropdownId === feed.feed_id && (
+                                        <>
+                                            <div 
+                                                className="fixed inset-0 z-10" 
+                                                onClick={() => setOpenDropdownId(null)}
+                                            ></div>
+                                            
+                                            <div className="absolute right-0 mt-2 w-36 bg-white rounded-xl shadow-xl border border-slate-100 z-20 py-1 overflow-hidden animate-in fade-in zoom-in duration-200">
+                                                <button 
+                                                    onClick={() => { handleEditFeed(feed); }}
+                                                    className="w-full text-left px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center gap-2"
+                                                >
+                                                    Edit Feed
+                                                </button>
+                                                <div className="border-t border-slate-50"></div>
+                                                <button 
+                                                    onClick={() => { handleDeleteFeed(feed); setOpenDropdownId(null); }}
+                                                    className="w-full text-left px-4 py-2 text-xs font-bold text-red-500 hover:bg-red-50 flex items-center gap-2"
+                                                >
+                                                    Delete Feed
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                                 
                             </div>
                         ))}
