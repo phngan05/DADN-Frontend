@@ -31,24 +31,62 @@ export function useFeeds() {
             setLoading(false);
         }
     }, []);
-
-    const addNewFeed = async (data: { type: string; key: string }) => {
-        try {
-            console.log("Adding new feed with data:", data);
-            await apiClient.post("/feed", {
-                feed_key: data.key,
-                category: data.type
-            });
-        } catch (error) {
-            console.error("Error adding new feed:", error);
-        }
-    };
+    
 
     useEffect(() => {
         fetchFeeds();
     }, [fetchFeeds]);
 
+    const updateFeeds = useCallback(async (newFeeds: Feed) => {
+        try {
+            const response = await apiClient.put(`/feed`,{
+                feed_id: newFeeds.feed_id,
+                feed_key: newFeeds.feed_key,
+                category: newFeeds.category
+            });
+            console.log("Updated feed:", response.data);
+            setFeedsData(feedsData?.map(feed => feed.feed_id === newFeeds.feed_id ? newFeeds : feed) || null);
+            return response.data;
+        } catch (err: any) {
+            const msg = err.response?.data?.detail || err.message || "Something went wrong";
+            setError(msg);
+            return null;
+        }
+    }, []);
 
+    const deleteFeed = useCallback(async (feedId: string) => {
+        try {
+            await apiClient.delete(`/feed/${feedId}`);
+            setFeedsData(feedsData?.filter(feed => feed.feed_id !== feedId) || null);
+            return true;
+        } catch (err: any) {
+            const msg = err.response?.data?.detail || err.message || "Something went wrong";
+            setError(msg);
+            return false;
+        }
+    }, [feedsData]);
+
+    const addNewFeed = async (data: { type: string; key: string }) => {
+        try {
+            console.log("Adding new feed with data:", data);
+            if(feedsData?.some(feed => feed.category === data.type)) {
+                return false;
+            }
+            const response = await apiClient.post("/feed", {
+                feed_key: data.key,
+                category: data.type
+            });
+            setFeedsData(prev => prev ? [...prev, {
+                feed_id: response.data.feed_id,
+                feed_key: data.key,
+                category: data.type
+            }] : null);
+            return true;
+        } catch (error) {
+            console.error("Error adding new feed:", error);
+            return false;
+        }
+    };
 
     return { 
         feedsData,
@@ -56,6 +94,8 @@ export function useFeeds() {
         loading,
         error,
         addNewFeed,
+        updateFeeds,
+        deleteFeed,
         refreshFeeds: fetchFeeds
     };
 }
