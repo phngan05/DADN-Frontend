@@ -3,6 +3,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState } from "react";
 import { logout } from "../services/auth";
 import VoiceControlModal from "./voice";
+import DoorSetting from "./door-setting";
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -15,6 +16,7 @@ export default function Sidebar() {
     { icon: <Settings size={20} />, label: "Setting", active: isSettingActive },
   ];
   const [isVoiceOpen, setIsVoiceOpen] = useState(false);
+  const [isDoorOpen, setIsDoorOpen] = useState(false)
   const handleChangeTab = (label: string) => {
     switch (label) {
       case "Dashboard":
@@ -26,14 +28,6 @@ export default function Sidebar() {
       case "Setting":
         router.push("/setting");
         break;
-    }
-  };
-  const handleOpenDoor = () => {
-    const password = prompt("Enter password:");
-    if (password === "comhome") {
-      alert("Door opened successfully!");
-    } else {
-      alert("Incorrect password. Access denied.");
     }
   };
 
@@ -67,7 +61,7 @@ export default function Sidebar() {
 
       <div className="space-y-4">
         <button
-        onClick={() => handleOpenDoor()}
+        onClick={() => setIsDoorOpen(true)}
         className="w-full primary flex items-center justify-center gap-2 py-3 rounded-3xl shadow-md">
           <DoorOpen size={18} />
           <span className="font-medium">Open Door</span>
@@ -92,6 +86,11 @@ export default function Sidebar() {
       isOpen={isVoiceOpen} 
       onClose={() => setIsVoiceOpen(false)} 
     />
+      <DoorSetting
+      isOpen={isDoorOpen} 
+      onClose={() => setIsDoorOpen(false)} 
+    />
+
     </div>
     
   );

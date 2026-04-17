@@ -41,6 +41,7 @@ export default function Dashboard() {
         socket.onopen = () => console.log("WebSocket đã mở");
         socket.onerror = (err) => console.error("Lỗi WebSocket:", err);
 
+
       } catch (error) {
         console.error("Lỗi khởi tạo Dashboard:", error);
       }
@@ -53,10 +54,25 @@ export default function Dashboard() {
     };
   }, [token, userId, router]); // Thêm token vào dependency
 
+  const handleTest = async() => {
+    try{
+      apiClient.put("record/auto", {
+        temperature_feed: "temperature",
+        humidity_feed: "humidity",
+        fan_feed: "fan-speed"
+      })
+    }
+    catch(error){
+      console.error("Lỗi update:", error);
+
+    }
+  };
+
   return (
     <div>
       <h1>Nhiệt độ: {sensorData.temperature || "--"} °C</h1>
       <h1>Độ ẩm: {sensorData.humidity || "--"} %</h1>
+      <button onClick={handleTest}>TEST AUTO MODE</button>
     </div>
   );
 }
