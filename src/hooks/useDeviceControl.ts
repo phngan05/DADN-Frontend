@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import apiClient from '@/src/services/api';
+import { AlertOctagon } from 'lucide-react';
 
 export function useDeviceControl() {
     const [loading, setLoading] = useState(false);
@@ -21,6 +22,29 @@ export function useDeviceControl() {
             setLoading(false);
         }
     };
+    const verifyPassword = async (inputPassword: string) => {
+        try {
+            const response = await apiClient.post("/door", { 
+                password: inputPassword 
+            });
+            
+            return response.data;
+        } catch (err: any) {
+            setError(err.message || "Incorrect Password!");
+            return false;
+        }
+    }
 
-    return { updateStatus, loading, error };
+    const updatePassword = async (oldPassword: string, newPassword: string) => {
+        try {
+            const response = await apiClient.put("/door", { 
+                old_password: oldPassword,
+                new_password: newPassword,
+            });
+            return response.data            
+        } catch (err: any) {
+            setError(err.message || "Update password failed!");
+        }
+    }
+    return { updateStatus, verifyPassword, updatePassword, loading, error };
 }
