@@ -15,17 +15,15 @@ import {
 
 
 export default function LoginPage() {
-  // BẠN NHÌN XEM: Không còn useState cho username và password nữa!
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // 1. Hàm xử lý nhận trực tiếp đối tượng FormData từ trình duyệt
   const handleLogin = async (formData: FormData) => {
     setLoading(true);
     setError("");
 
-    // 2. Trích xuất dữ liệu dựa vào thuộc tính 'name' của thẻ input
+    // get data from form using FormData API
     const identifier = formData.get("identifier") as string;
     const password = formData.get("password") as string;
 
@@ -82,7 +80,6 @@ export default function LoginPage() {
             Access your intelligent ecosystem
           </p>
 
-          {/* 3. Thay onSubmit bằng action */}
           <form className="mt-10 space-y-6" action={handleLogin}>
             
             <div className="space-y-2">
@@ -90,11 +87,10 @@ export default function LoginPage() {
                 Email or Username
               </label>
               <input
-                name="identifier" // 4. BẮT BUỘC PHẢI CÓ 'name' ĐỂ LẤY DỮ LIỆU
+                name="identifier" // name to get data in FormData
                 type="text"
                 required
                 placeholder="alex@concierge.io"
-                // Đã xóa bỏ value={...} và onChange={...}
                 className="w-full rounded-lg bg-[#F3F4F6] p-4 text-base focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
               />
             </div>
@@ -109,11 +105,10 @@ export default function LoginPage() {
                 </Link>
               </div>
               <input
-                name="password" // 4. BẮT BUỘC PHẢI CÓ 'name' ĐỂ LẤY DỮ LIỆU
+                name="password" // name to get data in FormData
                 type="password"
                 required
                 placeholder="••••••••"
-                // Đã xóa bỏ value={...} và onChange={...}
                 className="w-full rounded-lg bg-[#F3F4F6] p-4 text-base tracking-widest focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
               />
             </div>
@@ -130,7 +125,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Các liên kết phụ trợ */}
+          {/* Other Links */}
           <div className="mt-8 flex flex-col items-center space-y-6">
             <p className="text-sm text-gray-600">
               New to ComHome?{" "}

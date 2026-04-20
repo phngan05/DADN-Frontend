@@ -73,7 +73,7 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen w-full bg-white font-sans text-gray-900">
       
-      {/* NỬA TRÁI: Phần Giới thiệu */}
+      {/* LEFT block */}
       <div className="hidden w-1/2 flex-col justify-center bg-[#F4F8FB] p-12 lg:flex xl:p-24">
         <div className="max-w-lg">
           <h1 className="text-5xl font-extrabold tracking-tight text-[#1A73E8]">
@@ -104,7 +104,7 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      {/* NỬA PHẢI: Form Đăng ký */}
+          {/* NỬA PHẢI: Form Đăng ký */}
       <div className="flex w-full items-center justify-center p-8 lg:w-1/2">
         <div className="w-full max-w-md">
           <h2 className="text-4xl font-bold tracking-tight text-gray-900">
@@ -114,7 +114,6 @@ export default function RegisterPage() {
             Join the Lumina Home ecosystem today.
           </p>
 
-          {/* Thay thuộc tính action bằng onSubmit */}
           <form className="mt-8 space-y-6" onSubmit={handleRegister}>
             
             <div className="grid grid-cols-2 gap-4">
@@ -161,7 +160,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Khối cấu hình Adafruit IO */}
+            {/* Adafruit IO Block */}
             <div className="rounded-2xl bg-[#F4F4F5] p-6">
               <div className="mb-4 flex items-center gap-2 text-xs font-bold tracking-wider text-gray-800 uppercase">
                 <Sliders className="h-4 w-4 text-[#1A73E8]" />
@@ -196,10 +195,10 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            {/* Thông báo lỗi */}
+            {/* Error Message */}
             {error && <p className="text-sm font-medium text-red-500">{error}</p>}
 
-            {/* Nút Submit */}
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
@@ -210,7 +209,7 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          {/* Link chuyển về Login */}
+          {/* Link to Login */}
           <p className="mt-8 text-center text-sm font-medium text-gray-600">
             Already have an account?{" "}
             <Link href="/login" className="font-bold text-[#1A73E8] hover:underline">
