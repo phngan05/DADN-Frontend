@@ -29,7 +29,7 @@ export default function LoginPage() {
 
     try {
       await login(identifier, password);
-      router.push("/dashboard");
+      router.push("/");
     } catch (err) {
       console.error(err);
       setError("Thông tin đăng nhập không chính xác. Vui lòng thử lại.");
