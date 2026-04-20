@@ -3,6 +3,7 @@
 import { useState,} from "react";
 import { useRouter } from "next/navigation";
 import { login } from "@/src/services/auth";
+import { LoginForm } from "@/src/types/auth";
 import Link from "next/link";
 import { 
   Shield, 
@@ -18,17 +19,18 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const [formData, setformData] = useState<LoginForm>({
+    username: "",
+    password: ""
+  });
 
-  const handleLogin = async (formData: FormData) => {
+  const handleLogin = async () => {
     setLoading(true);
     setError("");
 
-    // get data from form using FormData API
-    const identifier = formData.get("identifier") as string;
-    const password = formData.get("password") as string;
 
     try {
-      await login(identifier, password);
+      await login(formData.username, formData.password);
       router.push("/");
     } catch (err) {
       console.error(err);
@@ -87,10 +89,12 @@ export default function LoginPage() {
                 Email or Username
               </label>
               <input
-                name="identifier" // name to get data in FormData
+                name="username" // name to get data in FormData
                 type="text"
+                value={formData.username}
+                onChange={(e) => setformData(prev => ({ ...prev, username: e.target.value }))}
                 required
-                placeholder="alex@concierge.io"
+                placeholder="Eg. abc"
                 className="w-full rounded-lg bg-[#F3F4F6] p-4 text-base focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
               />
             </div>
@@ -100,15 +104,14 @@ export default function LoginPage() {
                 <label className="block text-sm font-medium text-gray-700">
                   Password
                 </label>
-                <Link href="/forgot-password" className="text-sm font-medium text-[#1A73E8] hover:underline">
-                  Forgot password?
-                </Link>
               </div>
               <input
                 name="password" // name to get data in FormData
                 type="password"
+                value={formData.password}
+                onChange={(e) => setformData(prev => ({ ...prev, password: e.target.value }))}
                 required
-                placeholder="••••••••"
+                placeholder="Enter password..."
                 className="w-full rounded-lg bg-[#F3F4F6] p-4 text-base tracking-widest focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
               />
             </div>
@@ -140,10 +143,6 @@ export default function LoginPage() {
             </button>
           </div>  
 
-          {/* Footer Text */}
-          <p className="mt-16 text-center text-xs font-bold tracking-widest text-gray-400 uppercase">
-            Enterprise Secure Connection • Lumina OS V4.2
-          </p>
         </div>
       </div>
 

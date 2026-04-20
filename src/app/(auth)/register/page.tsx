@@ -2,11 +2,10 @@
 
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState} from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import apiClient from "@/src/services/api";
-import axios from "axios";
 import {
   Shield,
   Thermometer,
@@ -19,56 +18,43 @@ import {
 export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    full_name: "",
+    username: "",
+    password: "",
+    adafruit_username: "",
+    adafruit_api_key: "",
+
+  });
+  const [confirmedPassword, setConfirmPassword] = useState<string>("")
   const router = useRouter();
 
-  const handleRegister = async (e: FormEvent<HTMLFormElement>) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    const formData = new FormData(e.currentTarget);
-    
-    const full_name = formData.get("full_name") as string;
-    const username = formData.get("username") as string;
-    const password = formData.get("password") as string;
-    const confirmPassword = formData.get("confirm_password") as string;
-    const adafruit_username = formData.get("adafruit_username") as string;
-    const adafruit_api_key = formData.get("adafruit_api_key") as string;
-
-    if (password !== confirmPassword) {
-      setError("Mật khẩu xác nhận không khớp. Vui lòng kiểm tra lại.");
-      setLoading(false);
-      return;
-    }
-
-    const payload = {
-      full_name,
-      username,
-      password,
-      adafruit_username,
-      adafruit_api_key,
-    };
-
     try {
-      await apiClient.post("auth/register", payload);
-      alert("Đăng ký thành công! Hãy đăng nhập.");
-      router.push("/login");
-    } catch (err) {
-      if (axios.isAxiosError(err)) {
-        if (!err.response) {
-          setError("Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.");
-          setLoading(false);
-          return;
-        }
-        const detail = err.response?.data?.detail;
-        setError(Array.isArray(detail) ? detail[0].msg : detail || "Lỗi đăng ký");
-      } else {
-        setError("Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.");
+      // Gửi JSON body cho endpoint /register
+      if(formData.password !== confirmedPassword){
+        alert("Confirmed password is not the same as password!")
       }
+      else{
+        await apiClient.post(
+          "auth/register", 
+          formData
+        );
+        alert("Đăng ký thành công! Hãy đăng nhập.");
+        router.push("/login");
+      }
+    } catch (err) {
+      const detail = err.response?.data?.detail;
+      setError(Array.isArray(detail) ? detail[0].msg : detail || "Lỗi đăng ký");
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <div className="flex min-h-screen w-full bg-white font-sans text-gray-900">
@@ -104,7 +90,6 @@ export default function RegisterPage() {
         </div>
       </div>
 
-          {/* NỬA PHẢI: Form Đăng ký */}
       <div className="flex w-full items-center justify-center p-8 lg:w-1/2">
         <div className="w-full max-w-md">
           <h2 className="text-4xl font-bold tracking-tight text-gray-900">
@@ -122,7 +107,9 @@ export default function RegisterPage() {
                 <input
                   name="full_name"
                   type="text"
+                  value={formData.full_name}
                   required
+                  onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
                   placeholder="John Doe"
                   className="w-full rounded-lg bg-[#F3F4F6] p-3 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
                 />
@@ -132,7 +119,9 @@ export default function RegisterPage() {
                 <input
                   name="username"
                   type="text"
+                  value={formData.username}
                   required
+                  onChange={(e) => setFormData(prev => ({ ...prev, username: e.target.value }))}
                   placeholder="johndoe_home"
                   className="w-full rounded-lg bg-[#F3F4F6] p-3 text-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
                 />
@@ -142,7 +131,10 @@ export default function RegisterPage() {
                 <input
                   name="password"
                   type="password"
+                  value={formData.password}
                   required
+                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+
                   minLength={8}
                   placeholder="••••••••"
                   className="w-full rounded-lg bg-[#F3F4F6] p-3 text-sm tracking-widest focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
@@ -154,6 +146,8 @@ export default function RegisterPage() {
                   name="confirm_password"
                   type="password"
                   required
+                  value={confirmedPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="••••••••"
                   className="w-full rounded-lg bg-[#F3F4F6] p-3 text-sm tracking-widest focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
                 />
@@ -175,6 +169,8 @@ export default function RegisterPage() {
                   <input
                     name="adafruit_username"
                     type="text"
+                    value={formData.adafruit_username}
+                    onChange={(e) => setFormData(prev => ({ ...prev, adafruit_username: e.target.value }))}
                     required
                     placeholder="adafruit_user"
                     className="w-full rounded-lg bg-white p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
@@ -187,6 +183,8 @@ export default function RegisterPage() {
                   <input
                     name="adafruit_api_key"
                     type="password"
+                    value={formData.adafruit_api_key}
+                    onChange={(e) => setFormData(prev => ({ ...prev, adafruit_api_key: e.target.value }))}
                     required
                     placeholder="aio_••••••••••••••••••••••••"
                     className="w-full rounded-lg bg-white p-3 text-sm tracking-widest focus:outline-none focus:ring-2 focus:ring-[#1A73E8]"
