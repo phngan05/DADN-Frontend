@@ -4,8 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 
 import { X, Mic } from "lucide-react";
 import { useDeviceControl } from '@/src/hooks/useDeviceControl';
-import { useFeeds } from '../hooks/useFeeds';
-
 declare global {
   interface Window {
     webkitSpeechRecognition: any;
@@ -22,28 +20,26 @@ export default function VoiceControlModal({ isOpen, onClose }: VoiceControlModal
     const [isListening, setIsListening] = useState(false);
     const [transcript, setTranscript] = useState("");
     const { updateStatus, loading } = useDeviceControl();
-    const { feedsData} = useFeeds();
-    const ledStatusFeed = feedsData?.find(feed => feed.category === "LED Status");
-    const fanSpeedFeed = feedsData?.find(feed => feed.category === "Fan Speed");
     const recognitionRef = useRef<any>(null);
     const processCommandRef = useRef<(cmd: string) => Promise<void>>(async () => {});
-
     useEffect(() => {
         processCommandRef.current = async (command: string) => {
             if (command.includes("bật đèn") || command.includes("mở đèn")) {
-                await updateStatus(ledStatusFeed?.feed_key, 1);
+                await updateStatus("led-state", 1);
                 alert("Turn on light successfully!");
             } 
             else if (command.includes("tắt đèn")) {
-                await updateStatus(ledStatusFeed?.feed_key, 0);
+
+                await updateStatus("led-state", 0);
                 alert("Turn off light successfully!");
             }
             else if (command.includes("bật quạt") || command.includes("mở quạt")) {
-                await updateStatus(fanSpeedFeed?.feed_key, 70);
+                await updateStatus("fan-speed", 70);
                 alert("Turn on fan successfully!");
             }
             else if (command.includes("tắt quạt")) {
-                await updateStatus(fanSpeedFeed?.feed_key, 0);
+
+                await updateStatus("fan-speed", 0);
                 alert("Turn off fan successfully!");
             }
         };

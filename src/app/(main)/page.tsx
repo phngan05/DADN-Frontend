@@ -1,8 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Cookies from "js-cookie";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import apiClient from "@/src/services/api";
 import {
   ArrowUpRight,
@@ -13,72 +11,31 @@ import {
   SunMedium,
 } from "lucide-react";
 
-type DashboardMode = "automatic" | "manual";
-type HistoryRange = "24h" | "7d";
-type FeedCategory =
-  | "Temperature"
-  | "Humidity"
-  | "Illuminance"
-  | "LED Intensity"
-  | "Fan Speed"
-  | "LED Status";
+// Import hooks
+import { useFeeds } from "@/src/hooks/useFeeds";
+import { useDeviceControl } from "@/src/hooks/useDeviceControl";
+import { useDashboard } from "@/src/hooks/useDashboard";
+// Import Types
+import { HistoryRange } from "@/src/types/dashboard";
+import { FeedCategory } from "@/src/types/feed";
+import { DashboardMode } from "@/src/types/dashboard";
+import { Feed } from "@/src/types/feed";
+import { HistoryPoint } from "@/src/types/dashboard";
 
-interface FeedItem {
-  feed_id: string;
-  feed_key: string;
-  category: FeedCategory;
-}
+// Import components
+import DeviceCard from "@/src/components/device-card";
+import MetricCard from "@/src/components/metric-card";
+import HistoryChartCard from "@/src/components/history-chart-card";
+import metricStatus from "@/src/components/metric-status";
+import SwitchMode from "@/src/components/switch-mode";
 
-interface HistoryPoint {
-  label: string;
-  value: number | null;
-  time?: string;
-  timestamp: number;
-}
 
 const MODE_STORAGE_KEY = "comhome-dashboard-mode";
-
-function buildWsUrl(baseUrl: string, userId: string) {
-  const normalized = baseUrl.replace(/\/$/, "");
-  const noApi = normalized.endsWith("/api") ? normalized.slice(0, -4) : normalized;
-  return `${noApi.replace(/^http/, "ws")}/ws/${userId}`;
-}
 
 function toNumber(value: unknown) {
   if (value === null || value === undefined || value === "") return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
-}
-
-function metricStatus(category: FeedCategory, value: number | null) {
-  if (value === null) {
-    return { text: "--", className: "bg-slate-100 text-slate-400" };
-  }
-
-  if (category === "Temperature") {
-    if (value < 24) return { text: "COOL", className: "bg-cyan-50 text-cyan-600" };
-    if (value <= 30) return { text: "OPTIMAL", className: "bg-emerald-50 text-emerald-600" };
-    return { text: "HOT", className: "bg-rose-50 text-rose-600" };
-  }
-
-  if (category === "Humidity") {
-    if (value < 45) return { text: "LOW", className: "bg-amber-50 text-amber-600" };
-    if (value <= 70) return { text: "MODERATE", className: "bg-blue-50 text-blue-600" };
-    return { text: "HIGH", className: "bg-indigo-50 text-indigo-600" };
-  }
-
-  if (category === "Illuminance") {
-    if (value < 200) return { text: "DIM", className: "bg-slate-100 text-slate-500" };
-    if (value <= 500) return { text: "BRIGHT", className: "bg-orange-50 text-orange-600" };
-    return { text: "VERY BRIGHT", className: "bg-orange-100 text-orange-700" };
-  }
-
-  return { text: "ACTIVE", className: "bg-blue-50 text-blue-600" };
-}
-
-function formatMetricValue(value: number | null) {
-  if (value === null) return "--";
-  return `${Math.round(value)}`;
 }
 
 function formatHistoryLabel(date: Date, range: HistoryRange = "24h") {
@@ -201,283 +158,11 @@ return Array.from({ length: 7 }, (_, index) => {
 });
 }
 
-function SectionCard({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return (
-    <section
-      className={`rounded-[26px] border border-slate-100 bg-white p-5 shadow-[0_18px_48px_-36px_rgba(15,23,42,0.28)] ${className}`}
-    >
-      {children}
-    </section>
-  );
-}
-
-function MetricCard({
-  title,
-  value,
-  unit,
-  icon,
-  status,
-}: {
-  title: string;
-  value: number | null;
-  unit: string;
-  icon: ReactNode;
-  status: { text: string; className: string };
-}) {
-  return (
-    <SectionCard className="min-h-[150px]">
-      <div className="mb-6 flex items-start justify-between">
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 text-slate-400">
-          {icon}
-        </div>
-        <span className={`rounded-full px-3 py-1 text-[10px] font-bold tracking-[0.18em] ${status.className}`}>
-          {status.text}
-        </span>
-      </div>
-
-      <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-300">{title}</p>
-      <div className="mt-3 flex items-end gap-1">
-        <span className="text-[52px] font-black leading-none tracking-tight text-slate-900">
-          {formatMetricValue(value)}
-        </span>
-        <span className="mb-2 text-2xl font-bold text-slate-300">{unit}</span>
-      </div>
-    </SectionCard>
-  );
-}
-
-function ToggleSwitch({ checked, onClick }: { checked: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`relative h-8 w-16 rounded-full transition ${checked ? "bg-blue-600" : "bg-slate-200"}`}
-    >
-      <span
-        className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow-sm transition ${checked ? "left-9" : "left-1"}`}
-      />
-    </button>
-  );
-}
-
-function DeviceCard({
-  title,
-  value,
-  checked,
-  icon,
-  label,
-  onToggle,
-  onSliderChange,
-  onSliderCommit,
-}: {
-  title: string;
-  value: number;
-  checked: boolean;
-  icon: ReactNode;
-  label: string;
-  onToggle: () => void;
-  onSliderChange: (value: number) => void;
-  onSliderCommit: (value: number) => void;
-}) {
-  return (
-    <SectionCard className="min-h-[170px]">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-4">
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-600 text-white shadow-[0_8px_24px_-12px_rgba(37,99,235,0.8)]">
-            {icon}
-          </div>
-          <h3 className="text-[28px] font-bold leading-none text-slate-900 md:text-[22px]">{title}</h3>
-        </div>
-        <ToggleSwitch checked={checked} onClick={onToggle} />
-      </div>
-
-      <div className="mt-10 flex items-center justify-between text-[10px] font-bold uppercase tracking-[0.22em] text-slate-300">
-        <span>{label}</span>
-        <span className="text-slate-400">{Math.round(value)}%</span>
-      </div>
-
-      <input
-        type="range"
-        min={0}
-        max={100}
-        value={value}
-        onChange={(event) => onSliderChange(Number(event.target.value))}
-        onMouseUp={(event) => onSliderCommit(Number((event.currentTarget as HTMLInputElement).value))}
-        onTouchEnd={(event) => onSliderCommit(Number((event.currentTarget as HTMLInputElement).value))}
-        className="mt-4 h-2 w-full cursor-pointer appearance-none rounded-full bg-slate-200 accent-blue-600"
-      />
-    </SectionCard>
-  );
-}
-
-function MiniLineChart({ data, color, range }: { data: HistoryPoint[]; color: string; range: HistoryRange }) {
-  const width = range === "24h" ? 560 : 320;
-  const height = 150;
-  const paddingLeft = 16;
-  const paddingRight = 12;
-  const paddingTop = 16;
-  const paddingBottom = 34;
-
-  const innerWidth = width - paddingLeft - paddingRight;
-  const innerHeight = height - paddingTop - paddingBottom;
-
-  const numericValues = data.map((item) => item.value).filter((value): value is number => value !== null);
-  const min = numericValues.length ? Math.min(...numericValues) : 0;
-  const max = numericValues.length ? Math.max(...numericValues) : 100;
-  const extra = numericValues.length && max !== min ? (max - min) * 0.15 : 5;
-  const yMin = min - extra;
-  const yMax = max + extra;
-  const valueRange = yMax - yMin || 1;
-
-  const points = data.map((item, index) => {
-    const x = paddingLeft + (index * innerWidth) / Math.max(1, data.length - 1);
-    const y =
-      item.value === null
-        ? null
-        : height - paddingBottom - ((item.value - yMin) / valueRange) * innerHeight;
-
-    return {
-      ...item,
-      x,
-      y,
-    };
-  });
-
-  const segments: string[] = [];
-  let currentSegment = "";
-
-  for (const point of points) {
-    if (point.y === null) {
-      if (currentSegment) {
-        segments.push(currentSegment.trim());
-        currentSegment = "";
-      }
-      continue;
-    }
-
-    currentSegment += currentSegment ? ` L ${point.x} ${point.y}` : `M ${point.x} ${point.y}`;
-  }
-
-  if (currentSegment) {
-    segments.push(currentSegment.trim());
-  }
-
-  const gridRows = 3;
-  const yGuides = Array.from({ length: gridRows }, (_, index) => {
-    const ratio = gridRows === 1 ? 0 : index / (gridRows - 1);
-    return paddingTop + ratio * innerHeight;
-  });
-
-  const labelStep = range === "24h" ? 4 : 1;
-
-  return (
-    <div className="overflow-x-auto">
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className={`h-36 w-full ${range === "24h" ? "min-w-[560px]" : "min-w-[320px]"}`}
-        preserveAspectRatio="none"
-      >
-        {yGuides.map((y, index) => (
-          <line
-            key={index}
-            x1={paddingLeft}
-            x2={width - paddingRight}
-            y1={y}
-            y2={y}
-            stroke="#E5E7EB"
-            strokeDasharray="4 4"
-          />
-        ))}
-
-        <line
-          x1={paddingLeft}
-          x2={width - paddingRight}
-          y1={height - paddingBottom}
-          y2={height - paddingBottom}
-          stroke="#CBD5E1"
-        />
-
-        {points.map((point, index) => (
-          <line
-            key={`tick-${index}`}
-            x1={point.x}
-            x2={point.x}
-            y1={height - paddingBottom}
-            y2={height - paddingBottom + 6}
-            stroke="#CBD5E1"
-          />
-        ))}
-
-        {segments.map((segment, index) => (
-          <path
-            key={index}
-            d={segment}
-            fill="none"
-            stroke={color}
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        ))}
-
-        {points.map((point, index) =>
-          point.y !== null ? <circle key={index} cx={point.x} cy={point.y} r="3.5" fill={color} /> : null,
-        )}
-
-        {points.map((point, index) => {
-          const shouldShow = index % labelStep === 0 || index === points.length - 1;
-          if (!shouldShow) return null;
-
-          return (
-            <text
-              key={`label-${index}`}
-              x={point.x}
-              y={height - 8}
-              textAnchor="middle"
-              fontSize="10"
-              fill="#94A3B8"
-            >
-              {point.label}
-            </text>
-          );
-        })}
-      </svg>
-    </div>
-  );
-}
-
-function HistoryChartCard({
-  title,
-  subtitle,
-  icon,
-  color,
-  data,
-  range,
-}: {
-  title: string;
-  subtitle: string;
-  icon: ReactNode;
-  color: string;
-  data: HistoryPoint[];
-  range: HistoryRange;
-}) {
-  return (
-    <SectionCard className="border border-slate-100 shadow-none">
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-base font-bold text-slate-900">{title}</h3>
-          <p className="mt-1 text-xs text-slate-300">{subtitle}</p>
-        </div>
-        <div className="text-slate-300">{icon}</div>
-      </div>
-      <MiniLineChart data={data} color={color} range={range} />
-    </SectionCard>
-  );
-}
 
 export default function DashboardPage() {
+  const { connected, lastEvent } = useDashboard();
   const [mode, setMode] = useState<DashboardMode>("automatic");
-  const [feeds, setFeeds] = useState<FeedItem[]>([]);
+  const { feedsData, setFeedsData} = useFeeds();
   const [latestValues, setLatestValues] = useState<Record<string, string | number>>({});
   const [historyRange, setHistoryRange] = useState<HistoryRange>("24h");
   const [historyMap, setHistoryMap] = useState<Record<FeedCategory, HistoryPoint[]>>({
@@ -490,29 +175,36 @@ export default function DashboardPage() {
   });
   const [lightDraft, setLightDraft] = useState(0);
   const [fanDraft, setFanDraft] = useState(0);
+  const { updateStatus, loading } = useDeviceControl();
 
-  const socketRef = useRef<WebSocket | null>(null);
-  const pingTimerRef = useRef<number | null>(null);
-  const reconnectTimerRef = useRef<number | null>(null);
-
+  
   useEffect(() => {
     const savedMode = window.localStorage.getItem(MODE_STORAGE_KEY) as DashboardMode | null;
     if (savedMode === "automatic" || savedMode === "manual") {
       setMode(savedMode);
     }
   }, []);
-
+  
+  useEffect(() => {
+  if (lastEvent && lastEvent.feed) {
+    setLatestValues((prev) => ({
+      ...prev,
+      [lastEvent.feed]: lastEvent.value,
+    }));
+  }
+}, [lastEvent]);
   const feedByCategory = useMemo(() => {
-    const map = {} as Partial<Record<FeedCategory, FeedItem>>;
-    for (const feed of feeds) {
+    const map = {} as Partial<Record<FeedCategory, Feed>>;
+    for (const feed of feedsData ?? []) {
       map[feed.category] = feed;
     }
     return map;
-  }, [feeds]);
+  }, [feedsData]);
 
   const temperature = toNumber(feedByCategory.Temperature ? latestValues[feedByCategory.Temperature.feed_key] : null);
   const humidity = toNumber(feedByCategory.Humidity ? latestValues[feedByCategory.Humidity.feed_key] : null);
   const illuminance = toNumber(feedByCategory.Illuminance ? latestValues[feedByCategory.Illuminance.feed_key] : null);
+  
   const lightIntensity =
     toNumber(feedByCategory["LED Intensity"] ? latestValues[feedByCategory["LED Intensity"].feed_key] : null) ?? 0;
   const fanSpeed = toNumber(feedByCategory["Fan Speed"] ? latestValues[feedByCategory["Fan Speed"].feed_key] : null) ?? 0;
@@ -531,10 +223,16 @@ export default function DashboardPage() {
     setFanDraft(fanSpeed);
   }, [fanSpeed]);
 
+
+  useEffect(() => {
+    setLightDraft(lightIntensity);
+    setFanDraft(fanSpeed);
+  }, [fanSpeed, lightIntensity, feedsData]);
+  
   const loadFeeds = useCallback(async () => {
     const response = await apiClient.get("/feed");
-    const list = Array.isArray(response.data) ? (response.data as FeedItem[]) : [];
-    setFeeds(list);
+    const list = Array.isArray(response.data) ? (response.data as Feed[]) : [];
+    setFeedsData(list);
     return list;
   }, []);
 
@@ -544,7 +242,7 @@ export default function DashboardPage() {
     setLatestValues((prev) => ({ ...prev, ...(data as Record<string, string | number>) }));
   }, []);
 
-  const loadHistory = useCallback(async (feedList: FeedItem[], range: HistoryRange) => {
+  const loadHistory = useCallback(async (feedList: Feed[], range: HistoryRange) => {
     const targets = feedList.filter((item) => ["Temperature", "Humidity", "Illuminance"].includes(item.category));
     const emptySeries = normalizeHistory([], range);
 
@@ -581,58 +279,8 @@ export default function DashboardPage() {
     void init();
   }, [historyRange, loadFeeds, loadHistory, loadSnapshot]);
 
-  const connectWebSocket = useCallback(() => {
-    const userId = Cookies.get("userId");
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL;
-    if (!userId || !baseUrl) return;
-
-    if (socketRef.current) {
-      socketRef.current.close();
-    }
-
-    const socket = new WebSocket(buildWsUrl(baseUrl, userId));
-    socketRef.current = socket;
-
-    socket.onopen = () => {
-      socket.send("hello");
-      if (pingTimerRef.current) window.clearInterval(pingTimerRef.current);
-      pingTimerRef.current = window.setInterval(() => {
-        if (socket.readyState === WebSocket.OPEN) {
-          socket.send("ping");
-        }
-      }, 20000);
-    };
-
-    socket.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data) as { feed?: string; value?: string | number };
-        if (!payload.feed) return;
-        setLatestValues((prev) => ({ ...prev, [payload.feed]: payload.value ?? "" }));
-      } catch (error) {
-        console.error("WebSocket message parse failed:", error);
-      }
-    };
-
-    socket.onclose = () => {
-      if (pingTimerRef.current) window.clearInterval(pingTimerRef.current);
-      reconnectTimerRef.current = window.setTimeout(() => connectWebSocket(), 3500);
-    };
-  }, []);
-
-  useEffect(() => {
-    connectWebSocket();
-    return () => {
-      if (pingTimerRef.current) window.clearInterval(pingTimerRef.current);
-      if (reconnectTimerRef.current) window.clearTimeout(reconnectTimerRef.current);
-      socketRef.current?.close();
-    };
-  }, [connectWebSocket]);
-
   const sendCommand = useCallback(async (feedKey: string, value: number) => {
-    await apiClient.put("/record", {
-      feed_key: feedKey,
-      value,
-    });
+    await updateStatus(feedKey, value)
     setLatestValues((prev) => ({ ...prev, [feedKey]: value }));
   }, []);
 
@@ -647,20 +295,6 @@ export default function DashboardPage() {
     return true;
   }, [mode]);
 
-  const handleModeChange = useCallback(
-    (nextMode: DashboardMode) => {
-      if (nextMode === mode) return;
-      const accepted = window.confirm(
-        nextMode === "automatic"
-          ? "Bạn có đồng ý chuyển sang chế độ Automatic không?"
-          : "Bạn có đồng ý chuyển sang chế độ Manual không?",
-      );
-      if (!accepted) return;
-      setMode(nextMode);
-      window.localStorage.setItem(MODE_STORAGE_KEY, nextMode);
-    },
-    [mode],
-  );
 
   const handleLightToggle = useCallback(async () => {
     const intensityFeed = feedByCategory["LED Intensity"];
@@ -733,6 +367,24 @@ export default function DashboardPage() {
     [fanSpeed, feedByCategory, requestManualMode, sendCommand],
   );
 
+  const handleModeChange = async (newMode: "automatic" | "manual") => {
+    setMode(newMode);
+    if (newMode === "automatic") {
+      try {
+        const tempFeed = feedsData?.find((f) => f.category === "Temperature");
+        const humFeed = feedsData?.find((f) => f.category === "Humidity");
+        const fanSpeedFeed = feedsData?.find((f) => f.category === "Fan Speed");
+
+        await apiClient.put("record/auto", {
+          temperature_feed: tempFeed?.feed_key || "temperature",
+          humidity_feed: humFeed?.feed_key || "humidity",
+          fan_feed: fanSpeedFeed?.feed_key || "fan-speed",
+        });
+      } catch (error) {
+        console.error("Auto mode error:", error);
+      }
+    }
+  };
   return (
     <div className="min-h-full bg-slate-50 px-6 py-6 lg:px-7">
       <div className="mx-auto max-w-7xl">
@@ -743,24 +395,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="inline-flex rounded-2xl bg-white p-1.5 shadow-[0_12px_32px_-24px_rgba(15,23,42,0.26)]">
-            <button
-              type="button"
-              onClick={() => handleModeChange("automatic")}
-              className={`rounded-xl px-8 py-3 text-sm font-bold transition ${
-                mode === "automatic" ? "bg-blue-600 text-white" : "text-slate-500"
-              }`}
-            >
-              Automatic
-            </button>
-            <button
-              type="button"
-              onClick={() => handleModeChange("manual")}
-              className={`rounded-xl px-8 py-3 text-sm font-bold transition ${
-                mode === "manual" ? "bg-blue-600 text-white" : "text-slate-500"
-              }`}
-            >
-              Manual
-            </button>
+            <SwitchMode currentMode={mode} onModeChange={handleModeChange}/>
           </div>
         </div>
 

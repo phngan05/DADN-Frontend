@@ -4,14 +4,21 @@ import Header from "@/src/components/header";
 import apiClient from "@/src/services/api";
 import { useEffect} from "react";
 import { useUser } from "@/src/hooks/useUser";
+import { useRouter } from "next/navigation";
 import UserContext from "@/src/context/userContext";
+import Cookies from "js-cookie"
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const {userData, setUserData, updateUserData, loading, error, refreshUser} = useUser();
+  const router = useRouter()
 
   useEffect(() => {
     const initMQTTSession = async () => {
       try {
+        const token = Cookies.get("token")
+        if(!token){
+          router.push("/login");
+        }
         // Awake MQTT session by making a request to the backend
         console.log("Kích hoạt MQTT session...");
         await apiClient.get(`/record/all`);

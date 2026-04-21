@@ -7,6 +7,7 @@ import { useFeeds } from "@/src/hooks/useFeeds";
 import { useEffect, useState } from "react";
 import { useUserContext } from "@/src/context/userContext";
 import { User } from "@/src/types/user";
+import { FeedCategory } from "@/src/types/feed";
 
 export default function SettingPage() {
     const { userData, setUserData, updateUserData, loading } = useUserContext();
@@ -43,7 +44,7 @@ export default function SettingPage() {
         setOpenDropdownId(openDropdownId === id ? null : id);
     };
 
-    const handleEditFeed = (feed: { feed_id: string; feed_key: string; category: string }) => {
+    const handleEditFeed = (feed: { feed_id: string; feed_key: string; category: FeedCategory }) => {
         const newKey = prompt("Enter new feed key:", feed.feed_key);
         if (newKey && newKey.trim() !== "") {
             updateFeeds({ ...feed, feed_key: newKey.trim() });

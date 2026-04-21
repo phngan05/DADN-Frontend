@@ -32,6 +32,8 @@ export default function DoorSetting({
       console.log("Response: ", response)
       if(response){
         await updateStatus("servo", 1);
+        alert("Open door successfully!");
+
       }
       else{
         alert("Incorrect password!");

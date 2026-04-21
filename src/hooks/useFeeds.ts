@@ -93,6 +93,7 @@ export function useFeeds() {
         adafruitData,
         loading,
         error,
+        setFeedsData,
         addNewFeed,
         updateFeeds,
         deleteFeed,
