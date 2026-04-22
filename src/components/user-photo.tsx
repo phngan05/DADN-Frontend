@@ -7,7 +7,7 @@ interface UserPhotoProps {
 
 export default function UserPhoto({ src }: UserPhotoProps) {
   return (
-    <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-slate-100 flex items-center justify-center">
+    <div className="relative w-full h-full rounded-2xl overflow-hidden bg-slate-100 flex items-center justify-center">
       {src ? (
         <Image 
           src={src} 

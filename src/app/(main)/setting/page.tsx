@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { useUserContext } from "@/src/context/userContext";
 import { User } from "@/src/types/user";
 import { FeedCategory } from "@/src/types/feed";
-
+import ImageUploadButton from "@/src/components/update-photo";
 export default function SettingPage() {
     const { userData, setUserData, updateUserData, loading } = useUserContext();
     const [editedUserData, setEditedUserData] = useState<User>(userData);
@@ -56,6 +56,12 @@ export default function SettingPage() {
         }
 
     };
+
+    const handleUpdatePhoto = (url: string) => {
+        console.log("Ảnh mới đã upload tại:", url);
+        setEditedUserData(prev => ({ ...prev, photo_url: url }))
+    };
+
     useEffect(() => {
         if (userData) {
             setEditedUserData(userData);
@@ -76,9 +82,7 @@ export default function SettingPage() {
                     <div className="col-span-2 bg-white p-6 rounded-3xl flex gap-6 items-center shadow-sm border border-slate-100">
                         <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
                             <UserPhoto src={editedUserData.photo_url} />
-                            <button className="absolute bottom-1 right-1 button-primary p-1.5 rounded-lg shadow-lg">
-                                <Camera size={12} />
-                            </button>
+                            <ImageUploadButton onUploadSuccess={handleUpdatePhoto}/>
                         </div>
                         <div className="flex-1 grid grid-cols-2 gap-4">
                             <div>

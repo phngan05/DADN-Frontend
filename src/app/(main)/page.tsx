@@ -380,11 +380,12 @@ export default function DashboardPage() {
   };
   return (
     <div className="min-h-full bg-slate-50 px-6 py-6 lg:px-7">
-      <div className="mx-auto max-w-7xl">
+      <div className="max-w-6xl mx-auto">
         <div className="mb-6 flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <h1 className="text-[40px] font-black tracking-tight text-slate-900">ComHome Dashboard</h1>
-            <p className="mt-2 text-base text-slate-300">Real-time environment monitoring and device management</p>
+            <h2 className="text-2xl font-extrabold text-slate-800">ComHome Dashboard</h2>
+            <p className="text-slate-500 text-sm">Real-time environment monitoring and device management</p>
+
           </div>
 
           <div className="inline-flex rounded-2xl bg-white p-1.5 shadow-[0_12px_32px_-24px_rgba(15,23,42,0.26)]">
