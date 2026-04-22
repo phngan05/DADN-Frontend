@@ -18,7 +18,7 @@ export default function MetricCard({
 
 function formatMetricValue(value: number | null) {
   if (value === null) return "--";
-  return `${Math.round(value)}`;
+  return `${value}`;
 }
   return (
     <SectionCard className="min-h-[150px]">

@@ -371,15 +371,8 @@ export default function DashboardPage() {
     setMode(newMode);
     if (newMode === "automatic") {
       try {
-        const tempFeed = feedsData?.find((f) => f.category === "Temperature");
-        const humFeed = feedsData?.find((f) => f.category === "Humidity");
-        const fanSpeedFeed = feedsData?.find((f) => f.category === "Fan Speed");
 
-        await apiClient.put("record/auto", {
-          temperature_feed: tempFeed?.feed_key || "temperature",
-          humidity_feed: humFeed?.feed_key || "humidity",
-          fan_feed: fanSpeedFeed?.feed_key || "fan-speed",
-        });
+        await apiClient.put("record/auto");
       } catch (error) {
         console.error("Auto mode error:", error);
       }
