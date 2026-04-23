@@ -4,7 +4,8 @@ export type FeedCategory =
   | "Illuminance"
   | "LED Intensity"
   | "Fan Speed"
-  | "LED Status";
+  | "LED Status"
+  | "Servo";
 
 export interface Adafruit {
     server_id: string;

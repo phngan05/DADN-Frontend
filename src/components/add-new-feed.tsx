@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { X, ChevronDown, ArrowRight } from "lucide-react";
-
 interface ProvisionFeedModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -16,7 +15,7 @@ export default function ProvisionFeedModal({
 }: ProvisionFeedModalProps) {
     const [feedType, setFeedType] = useState("Temperature");
     const [feedKey, setFeedKey] = useState("");
-    const feedOptions = ["Temperature", "Humidity", "Illuminance", "LED Intensity", "Fan Speed", "LED Status"];
+    const feedOptions = ["Temperature", "Humidity", "Illuminance", "LED Intensity", "Fan Speed", "LED Status", "Servo"];
     if (!isOpen) return null;
 
     const handleSubmit = () => {

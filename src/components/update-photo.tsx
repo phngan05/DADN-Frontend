@@ -11,7 +11,6 @@ export default function ImageUploadButton({ onUploadSuccess }: ImageUploadButton
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Thay bằng API Key của bạn từ https://api.imgbb.com/
   const IMGBB_API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,13 +43,12 @@ export default function ImageUploadButton({ onUploadSuccess }: ImageUploadButton
       alert("An error occurred while uploading.");
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = ""; // Reset input
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
   return (
     <>
-      {/* Input file bị ẩn */}
       <input
         type="file"
         ref={fileInputRef}
@@ -59,7 +57,6 @@ export default function ImageUploadButton({ onUploadSuccess }: ImageUploadButton
         className="hidden"
       />
 
-      {/* Nút bấm của bạn */}
       <button
         type="button"
         disabled={isUploading}
