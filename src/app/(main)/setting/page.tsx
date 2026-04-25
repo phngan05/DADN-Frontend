@@ -29,7 +29,7 @@ export default function SettingPage() {
         setUserData(editedUserData);
         await updateUserData();
     };
-    const handleProvision = async (data: { type: string; key: string }) => {
+    const handleProvision = async (data: { type: FeedCategory; key: string }) => {
         const response = await addNewFeed({ type: data.type, key: data.key });
         if (response) {
             alert(`Feed "${data.type}" with key "${data.key}" has been provisioned!`);

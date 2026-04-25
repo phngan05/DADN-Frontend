@@ -86,7 +86,7 @@ export default function FaceManagementPage() {
               </div>
 
               {/* Registration Date */}
-              <p className="text-sm text-slate-600">{faceid.created_at}</p>
+              <p className="text-sm text-slate-600">{new Date(faceid.created_at).toLocaleDateString("vi-VN")}</p>
 
               {/* Status */}
               <div>

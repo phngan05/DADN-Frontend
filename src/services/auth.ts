@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import apiClient from './api';
+import { RegisterForm } from '../types/auth';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -33,3 +34,11 @@ export const logout = () => {
 
   window.location.href = '/login';
 };
+
+
+export const register = async (formData: RegisterForm) => {
+  await axios.post(`${API_URL}/auth/register`, formData);
+  
+  window.location.href = '/login';
+
+}

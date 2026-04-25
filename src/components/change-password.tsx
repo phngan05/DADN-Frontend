@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { X, ArrowRight} from "lucide-react";
-import { useDeviceControl } from "../hooks/useDeviceControl";
 interface DoorPasswordModalProps {
   onClose: () => void;
   onCompleted: (oldPassword: string, newPassword: string) => void;

@@ -1,21 +1,35 @@
 "use client";
 
 import { Bell, Clock } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import UserPhoto from "./user-photo";
 import NotificationDropdown from "./notification";
 import { useUserContext } from "../context/userContext";
 
 export default function Header() {
   const date = new Date();
-  const { userData, loading } = useUserContext();
+  const { userData, loading, notifications, updateRead } = useUserContext();
   const [showNotifications, setShowNotifications] = useState(false);
-
   const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const hours = date.getHours();
   const ampm = hours >= 12 ? "PM" : "AM";
   const displayHours = hours % 12 || 12;
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (notifications) {
+        const count = notifications.filter((n) => !n.is_read).length;
+        setUnreadCount(count);
+    }
+}, [notifications]);
+
+  const handleShowNotifications = async () => {
+    setShowNotifications(true);
+    if(unreadCount){
+      await updateRead();
+    }
+  }
 
   return (
     <header className="flex justify-between items-center bg-white px-8 py-4 border-b border-gray-50">
@@ -32,15 +46,18 @@ export default function Header() {
       <div className="flex items-center gap-6">
         <div className="relative">
           <button
-            onClick={() => setShowNotifications(!showNotifications)}
+            onClick={handleShowNotifications}
             className="relative"
           >
             <Bell className="text-gray-400 hover:text-gray-600 transition-colors" size={22} />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
-              2
-            </span>
+            {unreadCount? 
+            (<span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center border-2 border-white">
+              {unreadCount}
+            </span>)
+            : <div></div>}
           </button>
           <NotificationDropdown
+            notifications={notifications}
             isOpen={showNotifications}
             onClose={() => setShowNotifications(false)}
           />

@@ -4,12 +4,14 @@ import Header from "@/src/components/header";
 import apiClient from "@/src/services/api";
 import { useEffect} from "react";
 import { useUser } from "@/src/hooks/useUser";
+import { useNotification } from "@/src/hooks/useNoti";
 import { useRouter } from "next/navigation";
 import UserContext from "@/src/context/userContext";
 import Cookies from "js-cookie"
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const {userData, setUserData, updateUserData, loading, error, refreshUser} = useUser();
+  const {notifications, updateRead, fetchNotifications} = useNotification();
   const router = useRouter()
 
   useEffect(() => {
@@ -31,7 +33,17 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   }, []);
   
   return (
-    <UserContext.Provider value={{ userData, setUserData, updateUserData, loading, error, refreshUser }}>
+    <UserContext.Provider value={
+      { userData, 
+        setUserData, 
+        updateUserData, 
+        loading, 
+        error, 
+        refreshUser, 
+        notifications, 
+        updateRead, 
+        fetchNotifications }
+      }>
     <div className="flex h-screen overflow-hidden bg-slate-50 text-slate-900">
       {/* Fixed Sidebar */}
       <aside className="w-64 h-screen sticky top-0 flex-shrink-0 border-r bg-white z-20">

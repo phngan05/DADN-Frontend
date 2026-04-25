@@ -13,7 +13,8 @@ export default function UserPhoto({ src }: UserPhotoProps) {
           src={src} 
           alt="User Avatar" 
           fill 
-          className="object-cover" 
+          className="object-cover"
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
       ) : (
         <CircleUser className="w-16 h-16 text-slate-300" />

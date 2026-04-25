@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/src/services/api';
-import { Adafruit, Feed } from '../types/feed';
+import { Adafruit, Feed, FeedCategory } from '../types/feed';
 
 export function useFeeds() {
     const [loading, setLoading] = useState<boolean>(true);
@@ -66,7 +66,7 @@ export function useFeeds() {
         }
     }, [feedsData]);
 
-    const addNewFeed = async (data: { type: string; key: string }) => {
+    const addNewFeed = async (data: { type: FeedCategory; key: string }) => {
         try {
             console.log("Adding new feed with data:", data);
             if(feedsData?.some(feed => feed.category === data.type)) {
@@ -79,7 +79,7 @@ export function useFeeds() {
             setFeedsData(prev => prev ? [...prev, {
                 feed_id: response.data.feed_id,
                 feed_key: data.key,
-                category: data.type
+                category: data.type,
             }] : null);
             return true;
         } catch (error) {

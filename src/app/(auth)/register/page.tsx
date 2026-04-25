@@ -3,9 +3,7 @@
 "use client";
 
 import { useState} from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import apiClient from "@/src/services/api";
 import {
   Shield,
   Thermometer,
@@ -14,11 +12,13 @@ import {
   ArrowRight,
   Sliders
 } from "lucide-react";
+import { RegisterForm } from "@/src/types/auth";
+import { register } from "@/src/services/auth";
 
 export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<RegisterForm>({
     full_name: "",
     username: "",
     password: "",
@@ -27,7 +27,6 @@ export default function RegisterPage() {
 
   });
   const [confirmedPassword, setConfirmPassword] = useState<string>("")
-  const router = useRouter();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -40,16 +39,12 @@ export default function RegisterPage() {
         alert("Confirmed password is not the same as password!")
       }
       else{
-        await apiClient.post(
-          "auth/register", 
-          formData
-        );
-        alert("Đăng ký thành công! Hãy đăng nhập.");
-        router.push("/login");
+        await register(formData);
+        alert("Register new account successfully!");
       }
     } catch (err) {
       const detail = err.response?.data?.detail;
-      setError(Array.isArray(detail) ? detail[0].msg : detail || "Lỗi đăng ký");
+      setError(Array.isArray(detail) ? detail[0].msg : detail || "Register failed!");
     } finally {
       setLoading(false);
     }
