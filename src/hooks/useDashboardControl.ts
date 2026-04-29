@@ -7,8 +7,6 @@ import { useDeviceControl } from "./useDeviceControl";
 import { Feed, FeedCategory } from "@/src/types/feed";
 import { HistoryRange, HistoryPoint, DashboardMode } from "@/src/types/dashboard";
 
-const MODE_STORAGE_KEY = "comhome-dashboard-mode";
-
 interface LastEvent {
   feed?: string;
   value?: string | number;
@@ -16,16 +14,7 @@ interface LastEvent {
 
 export function useDashboardControl(feedsData: Feed[] | null, latestValues: Record<string, string | number>, setLatestValues: React.Dispatch<React.SetStateAction<Record<string, string | number>>>, lastEvent: LastEvent | null) {
   const { toNumber, normalizeHistory } = useHistoryData();
-  const [mode, setMode] = useState<DashboardMode>(() => {
-    // Initialize mode synchronously from localStorage
-    if (typeof window !== "undefined") {
-      const savedMode = window.localStorage.getItem(MODE_STORAGE_KEY);
-      if (savedMode === "automatic" || savedMode === "manual") {
-        return savedMode;
-      }
-    }
-    return "automatic";
-  });
+  const [mode, setMode] = useState<DashboardMode>("manual");
   const [historyRange, setHistoryRange] = useState<HistoryRange>("24h");
   const [historyMap, setHistoryMap] = useState<Record<FeedCategory, HistoryPoint[]>>({
     Temperature: normalizeHistory([], "24h"),
