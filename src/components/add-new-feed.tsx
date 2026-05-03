@@ -2,10 +2,11 @@
 
 import React, { useState } from "react";
 import { X, ChevronDown, ArrowRight } from "lucide-react";
+import { FeedCategory } from "../types/feed";
 interface ProvisionFeedModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onComplete: (data: { type: string; key: string }) => void;
+  onComplete: (data: { type: FeedCategory; key: string }) => void;
 }
 
 export default function ProvisionFeedModal({
@@ -13,7 +14,7 @@ export default function ProvisionFeedModal({
   onClose,
   onComplete,
 }: ProvisionFeedModalProps) {
-    const [feedType, setFeedType] = useState("Temperature");
+    const [feedType, setFeedType] = useState<FeedCategory>("Temperature");
     const [feedKey, setFeedKey] = useState("");
     const feedOptions = ["Temperature", "Humidity", "Illuminance", "LED Intensity", "Fan Speed", "LED Status", "Servo"];
     if (!isOpen) return null;
@@ -70,7 +71,7 @@ export default function ProvisionFeedModal({
             <input
               type="text"
               value={feedKey}
-              onChange={(e) => setFeedKey(e.target.value)}
+              onChange={(e) => setFeedKey(e.target.value as FeedCategory)}
               placeholder="e.g. led-status"
               className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-sm font-medium text-slate-700 outline-none focus:border-blue-300 transition-all"
             />
