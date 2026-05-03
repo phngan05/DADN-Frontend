@@ -1,5 +1,5 @@
 import React from "react";
-import { HistoryPoint } from "../types/dashboard";
+import { HistoryPoint, HistoryRange } from "../types/dashboard";
 
 export default function MiniLineChart({ data, color, range }: { data: HistoryPoint[]; color: string; range: HistoryRange }) {
   const width = range === "24h" ? 560 : 320;
@@ -55,7 +55,7 @@ export default function MiniLineChart({ data, color, range }: { data: HistoryPoi
 
   const gridRows = 3;
   const yGuides = Array.from({ length: gridRows }, (_, index) => {
-    const ratio = gridRows === 1 ? 0 : index / (gridRows - 1);
+    const ratio = index / (gridRows - 1);
     return paddingTop + ratio * innerHeight;
   });
 
