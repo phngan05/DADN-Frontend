@@ -75,17 +75,6 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
     setFanDraft(values.fanSpeed);
   }, [getDeviceValues]);
 
-  // Use useMemo to compute drafts
-  const lightDraftValue = useMemo(() => {
-    const values = getDeviceValues();
-    return values.lightIntensity;
-  }, [getDeviceValues]);
-
-  const fanDraftValue = useMemo(() => {
-    const values = getDeviceValues();
-    return values.fanSpeed;
-  }, [getDeviceValues]);
-
   // Load feeds
   const loadFeeds = useCallback(async () => {
     const response = await apiClient.get("/feed");
@@ -130,6 +119,16 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
     setLatestValues((prev) => ({ ...prev, [feedKey]: value }));
   }, [updateStatus, setLatestValues]);
 
+  // Request manual mode
+  const requestManualMode = useCallback(() => {
+    if (mode === "manual") return true;
+    const accepted = window.confirm(
+      "Hệ thống đang ở chế độ Automatic. Bạn có muốn chuyển sang Manual để tiếp tục điều khiển không?",
+    );
+    if (!accepted) return false;
+    setMode("manual");
+    return true;
+  }, [mode]);
 
   // Light toggle
   const handleLightToggle = useCallback(async () => {
@@ -139,6 +138,7 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
     const statusFeed = feeds["LED Status"];
     
     if (!intensityFeed && !statusFeed) return;
+    if (!requestManualMode()) return;
 
     try {
       const nextOn = !values.lightOn;
@@ -148,7 +148,7 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
       console.error("Light toggle failed:", error);
       window.alert("Không thể gửi lệnh điều khiển đèn.");
     }
-  }, [feedByCategory, getDeviceValues,sendCommand]);
+  }, [feedByCategory, getDeviceValues, requestManualMode, sendCommand]);
 
   // Light commit
   const handleLightCommit = useCallback(async (value: number) => {
@@ -158,6 +158,10 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
     const statusFeed = feeds["LED Status"];
     
     if (!intensityFeed && !statusFeed) return;
+    if (!requestManualMode()) {
+      setLightDraft(values.lightIntensity);
+      return;
+    }
 
     try {
       if (intensityFeed) await sendCommand(intensityFeed.feed_key, value);
@@ -167,7 +171,7 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
       setLightDraft(values.lightIntensity);
       window.alert("Không thể cập nhật độ sáng đèn.");
     }
-  }, [feedByCategory, getDeviceValues, sendCommand]);
+  }, [feedByCategory, getDeviceValues, requestManualMode, sendCommand]);
 
   // Fan toggle
   const handleFanToggle = useCallback(async () => {
@@ -176,6 +180,7 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
     const fanFeed = feeds["Fan Speed"];
     
     if (!fanFeed) return;
+    if (!requestManualMode()) return;
 
     try {
       await sendCommand(fanFeed.feed_key, values.fanOn ? 0 : Math.max(30, values.fanSpeed || 60));
@@ -183,7 +188,7 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
       console.error("Fan toggle failed:", error);
       window.alert("Không thể gửi lệnh điều khiển quạt.");
     }
-  }, [feedByCategory, getDeviceValues, sendCommand]);
+  }, [feedByCategory, getDeviceValues, requestManualMode, sendCommand]);
 
   // Fan commit
   const handleFanCommit = useCallback(async (value: number) => {
@@ -192,6 +197,10 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
     const fanFeed = feeds["Fan Speed"];
     
     if (!fanFeed) return;
+    if (!requestManualMode()) {
+      setFanDraft(values.fanSpeed);
+      return;
+    }
 
     try {
       await sendCommand(fanFeed.feed_key, value);
@@ -200,7 +209,7 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
       setFanDraft(values.fanSpeed);
       window.alert("Không thể cập nhật tốc độ quạt.");
     }
-  }, [feedByCategory, getDeviceValues, sendCommand]);
+  }, [feedByCategory, getDeviceValues, requestManualMode, sendCommand]);
 
   // Mode change
   const handleModeChange = useCallback(async (newMode: "automatic" | "manual") => {
@@ -219,9 +228,9 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
     historyRange,
     setHistoryRange,
     historyMap,
-    lightDraft: lightDraftValue,
+    lightDraft,
     setLightDraft,
-    fanDraft: fanDraftValue,
+    fanDraft,
     setFanDraft,
     loadFeeds,
     loadSnapshot,
