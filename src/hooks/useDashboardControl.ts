@@ -139,7 +139,6 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
     const statusFeed = feeds["LED Status"];
     
     if (!intensityFeed && !statusFeed) return;
-    if (!requestManualMode()) return;
 
     try {
       const nextOn = !values.lightOn;
@@ -177,7 +176,6 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
     const fanFeed = feeds["Fan Speed"];
     
     if (!fanFeed) return;
-    if (!requestManualMode()) return;
 
     try {
       await sendCommand(fanFeed.feed_key, values.fanOn ? 0 : Math.max(30, values.fanSpeed || 60));
