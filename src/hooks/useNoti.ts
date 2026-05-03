@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import apiClient from '@/src/services/api';
 import { Notification } from '../types/noti';
 import Cookies from "js-cookie"
@@ -24,9 +24,7 @@ export function useNotification() {
         setLoading(true);
         
         const userId = Cookies.get("userId")
-        // Thay url này bằng endpoint SSE của Backend (ví dụ: /noti/stream)
-        // Lưu ý: EventSource thuần không gửi kèm Custom Header (như Authorization) dễ dàng được.
-        // Nếu API cần Token, bạn có thể dùng URL: `/noti/stream?token=abc`
+
         const sseUrl = `${process.env.NEXT_PUBLIC_API_URL}/noti/${userId}`; 
         const eventSource = new EventSource(sseUrl);
 
@@ -35,8 +33,6 @@ export function useNotification() {
             try {
                 const newData = JSON.parse(event.data);
                 
-                // Tùy vào Backend trả về 1 list mới hay chỉ 1 item mới
-                // Giả sử backend trả về toàn bộ list mới:
                 setNotifications(newData);
                 
                 setLoading(false);
@@ -46,15 +42,13 @@ export function useNotification() {
             }
         };
 
-        // Xử lý lỗi kết nối
         eventSource.onerror = (err) => {
             console.error("SSE Connection Error:", err);
             setError("Mất kết nối với máy chủ thông báo");
             setLoading(false);
-            eventSource.close(); // Đóng nếu cần, hoặc để trình duyệt tự reconnect
+            eventSource.close(); 
         };
 
-        // Clean up: Đóng kết nối khi component unmount
         return () => {
             eventSource.close();
         };

@@ -28,7 +28,7 @@ export default function RegisterPage() {
   });
   const [confirmedPassword, setConfirmPassword] = useState<string>("")
 
-  const handleRegister = async (e) => {
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");

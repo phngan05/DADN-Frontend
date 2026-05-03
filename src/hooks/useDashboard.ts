@@ -3,11 +3,11 @@
 import { useState, useMemo, useCallback } from "react";
 import { useWebSocket } from "./useWebsocket";
 import Cookies from "js-cookie"
-
+import { Feed } from "../types/feed";
 
 
 export function useDashboard() {
-    const [feedsData, setFeedsData] = useState<any[]>([]);
+    const [feedsData, setFeedsData] = useState<Feed[]>([]);
     const [lastEvent, setLastEvent] = useState<any>(null);
     const buildWsUrl = () => {
         const userId = Cookies.get("userId");
@@ -29,7 +29,7 @@ export function useDashboard() {
   );
 
   const feedByCategory = useMemo(() => {
-    const map: Record<string, any> = {};
+    const map: Record<string, Feed> = {};
 
     for (const feed of feedsData ?? []) {
       map[feed.category] = feed;

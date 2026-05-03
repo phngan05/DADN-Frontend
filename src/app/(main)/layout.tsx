@@ -11,7 +11,7 @@ import Cookies from "js-cookie"
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   const {userData, setUserData, updateUserData, loading, error, refreshUser} = useUser();
-  const {notifications, updateRead, fetchNotifications} = useNotification();
+  const {notifications, updateRead} = useNotification();
   const router = useRouter()
 
   useEffect(() => {
@@ -41,8 +41,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         error, 
         refreshUser, 
         notifications, 
-        updateRead, 
-        fetchNotifications }
+        updateRead,
+      }
       }>
     <div className="flex h-screen overflow-hidden bg-slate-50 text-slate-900">
       {/* Fixed Sidebar */}
