@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import UserPhoto from "./user-photo";
 import NotificationDropdown from "./notification";
 import { useUserContext } from "../context/userContext";
-
+import { Notification } from "../types/noti";
 export default function Header() {
   const date = new Date();
   const { userData, loading, notifications, updateRead } = useUserContext();
@@ -19,7 +19,7 @@ export default function Header() {
 
   useEffect(() => {
     if (notifications) {
-        const count = notifications.filter((n) => !n.is_read).length;
+        const count = notifications.filter((n: Notification) => !n.is_read).length;
         setUnreadCount(count);
     }
 }, [notifications]);
