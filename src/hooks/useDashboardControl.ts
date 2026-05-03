@@ -130,17 +130,6 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
     setLatestValues((prev) => ({ ...prev, [feedKey]: value }));
   }, [updateStatus, setLatestValues]);
 
-  // Request manual mode
-  const requestManualMode = useCallback(() => {
-    if (mode === "manual") return true;
-    const accepted = window.confirm(
-      "Hệ thống đang ở chế độ Automatic. Bạn có muốn chuyển sang Manual để tiếp tục điều khiển không?",
-    );
-    if (!accepted) return false;
-    setMode("manual");
-    window.localStorage.setItem(MODE_STORAGE_KEY, "manual");
-    return true;
-  }, [mode]);
 
   // Light toggle
   const handleLightToggle = useCallback(async () => {
@@ -160,7 +149,7 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
       console.error("Light toggle failed:", error);
       window.alert("Không thể gửi lệnh điều khiển đèn.");
     }
-  }, [feedByCategory, getDeviceValues, requestManualMode, sendCommand]);
+  }, [feedByCategory, getDeviceValues,sendCommand]);
 
   // Light commit
   const handleLightCommit = useCallback(async (value: number) => {
@@ -170,10 +159,6 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
     const statusFeed = feeds["LED Status"];
     
     if (!intensityFeed && !statusFeed) return;
-    if (!requestManualMode()) {
-      setLightDraft(values.lightIntensity);
-      return;
-    }
 
     try {
       if (intensityFeed) await sendCommand(intensityFeed.feed_key, value);
@@ -183,7 +168,7 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
       setLightDraft(values.lightIntensity);
       window.alert("Không thể cập nhật độ sáng đèn.");
     }
-  }, [feedByCategory, getDeviceValues, requestManualMode, sendCommand]);
+  }, [feedByCategory, getDeviceValues, sendCommand]);
 
   // Fan toggle
   const handleFanToggle = useCallback(async () => {
@@ -200,7 +185,7 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
       console.error("Fan toggle failed:", error);
       window.alert("Không thể gửi lệnh điều khiển quạt.");
     }
-  }, [feedByCategory, getDeviceValues, requestManualMode, sendCommand]);
+  }, [feedByCategory, getDeviceValues, sendCommand]);
 
   // Fan commit
   const handleFanCommit = useCallback(async (value: number) => {
@@ -209,10 +194,6 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
     const fanFeed = feeds["Fan Speed"];
     
     if (!fanFeed) return;
-    if (!requestManualMode()) {
-      setFanDraft(values.fanSpeed);
-      return;
-    }
 
     try {
       await sendCommand(fanFeed.feed_key, value);
@@ -221,7 +202,7 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
       setFanDraft(values.fanSpeed);
       window.alert("Không thể cập nhật tốc độ quạt.");
     }
-  }, [feedByCategory, getDeviceValues, requestManualMode, sendCommand]);
+  }, [feedByCategory, getDeviceValues, sendCommand]);
 
   // Mode change
   const handleModeChange = useCallback(async (newMode: "automatic" | "manual") => {
