@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import apiClient from '@/src/services/api';
-import { AlertOctagon } from 'lucide-react';
 
 export function useDeviceControl() {
     const [loading, setLoading] = useState(false);

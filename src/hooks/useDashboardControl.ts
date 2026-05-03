@@ -75,17 +75,6 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
     setFanDraft(values.fanSpeed);
   }, [getDeviceValues]);
 
-  // Use useMemo to compute drafts
-  const lightDraftValue = useMemo(() => {
-    const values = getDeviceValues();
-    return values.lightIntensity;
-  }, [getDeviceValues]);
-
-  const fanDraftValue = useMemo(() => {
-    const values = getDeviceValues();
-    return values.fanSpeed;
-  }, [getDeviceValues]);
-
   // Load feeds
   const loadFeeds = useCallback(async () => {
     const response = await apiClient.get("/feed");
@@ -138,7 +127,6 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
     );
     if (!accepted) return false;
     setMode("manual");
-    window.localStorage.setItem(MODE_STORAGE_KEY, "manual");
     return true;
   }, [mode]);
 
@@ -240,9 +228,9 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
     historyRange,
     setHistoryRange,
     historyMap,
-    lightDraft: lightDraftValue,
+    lightDraft,
     setLightDraft,
-    fanDraft: fanDraftValue,
+    fanDraft,
     setFanDraft,
     loadFeeds,
     loadSnapshot,

@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { RegisterForm } from "@/src/types/auth";
 import { register } from "@/src/services/auth";
-
+import { AxiosError } from "axios";
 export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,7 +28,7 @@ export default function RegisterPage() {
   });
   const [confirmedPassword, setConfirmPassword] = useState<string>("")
 
-  const handleRegister = async (e) => {
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -43,8 +43,12 @@ export default function RegisterPage() {
         alert("Register new account successfully!");
       }
     } catch (err) {
+      if (err instanceof AxiosError) {
       const detail = err.response?.data?.detail;
       setError(Array.isArray(detail) ? detail[0].msg : detail || "Register failed!");
+    } else {
+      setError("An unexpected error occurred");
+    }
     } finally {
       setLoading(false);
     }

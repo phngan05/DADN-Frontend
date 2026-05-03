@@ -57,7 +57,7 @@ export default function NotificationDropdown({ notifications, isOpen, onClose }:
               }`}
             >
               <div
-                className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${notification.iconBg}`}
+                className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
               >
                 {getIcon(notification)}
               </div>

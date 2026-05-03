@@ -12,7 +12,7 @@ import ImageUploadButton from "@/src/components/update-photo";
 export default function SettingPage() {
     const { userData, setUserData, updateUserData, loading } = useUserContext();
     const [editedUserData, setEditedUserData] = useState<User>(userData);
-    const { feedsData, adafruitData, addNewFeed, updateFeeds, deleteFeed, refreshFeeds } = useFeeds();
+    const { feedsData, adafruitData, addNewFeed, updateFeeds, deleteFeed } = useFeeds();
     const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
     const feedIcons: Record<string, React.ReactNode> = {
         "Temperature": <Thermometer size={18} className="text-red-500" />,
@@ -51,7 +51,7 @@ export default function SettingPage() {
             updateFeeds({ ...feed, feed_key: newKey.trim() });
         }
     };
-    const handleDeleteFeed = (feed: { feed_id: string; feed_key: string; category: string }) => {
+    const handleDeleteFeed = (feed: { feed_id: string; feed_key: string; category: FeedCategory }) => {
         if (confirm(`Are you sure you want to delete feed "${feed.category}"?`)) {
             deleteFeed(feed.feed_id);
         }
