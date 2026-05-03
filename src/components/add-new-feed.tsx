@@ -50,7 +50,7 @@ export default function ProvisionFeedModal({
             <div className="relative">
               <select 
                 value={feedType}
-                onChange={(e) => setFeedType(e.target.value)}
+                onChange={(e) => setFeedType(e.target.value as FeedCategory)}
                 className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-sm font-medium text-slate-700 appearance-none outline-none focus:border-blue-300 transition-all cursor-pointer"
               >
                 {feedOptions.map((option) => (
@@ -71,7 +71,7 @@ export default function ProvisionFeedModal({
             <input
               type="text"
               value={feedKey}
-              onChange={(e) => setFeedKey(e.target.value as FeedCategory)}
+              onChange={(e) => setFeedKey(e.target.value)}
               placeholder="e.g. led-status"
               className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-sm font-medium text-slate-700 outline-none focus:border-blue-300 transition-all"
             />
