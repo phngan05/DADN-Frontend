@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { X, ChevronDown, ArrowRight } from "lucide-react";
 import { FeedCategory } from "../types/feed";
+
 interface ProvisionFeedModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,23 +15,30 @@ export default function ProvisionFeedModal({
   onClose,
   onComplete,
 }: ProvisionFeedModalProps) {
-    const [feedType, setFeedType] = useState<FeedCategory>("Temperature");
-    const [feedKey, setFeedKey] = useState("");
-    const feedOptions = ["Temperature", "Humidity", "Illuminance", "LED Intensity", "Fan Speed", "LED Status", "Servo"];
-    if (!isOpen) return null;
+  const [feedType, setFeedType] = useState<FeedCategory>("Temperature");
+  const [feedKey, setFeedKey] = useState("");
+  const feedOptions: FeedCategory[] = [
+    "Temperature",
+    "Humidity",
+    "Illuminance",
+    "LED Intensity",
+    "Fan Speed",
+    "Servo",
+  ];
 
-    const handleSubmit = () => {
-        onComplete({ type: feedType, key: feedKey });
-        onClose();
-    };
+  if (!isOpen) return null;
+
+  const handleSubmit = () => {
+    onComplete({ type: feedType, key: feedKey });
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/20 backdrop-blur-md">
       {/* Modal Container */}
       <div className="relative w-full max-w-lg bg-white rounded-[40px] p-10 shadow-2xl border border-slate-100 animate-in fade-in zoom-in duration-300">
-        
         {/* Close Button */}
-        <button 
+        <button
           onClick={onClose}
           className="absolute top-8 right-8 text-slate-400 hover:text-slate-600 transition-colors"
         >
@@ -48,7 +56,7 @@ export default function ProvisionFeedModal({
               Feed Type
             </label>
             <div className="relative">
-              <select 
+              <select
                 value={feedType}
                 onChange={(e) => setFeedType(e.target.value as FeedCategory)}
                 className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-sm font-medium text-slate-700 appearance-none outline-none focus:border-blue-300 transition-all cursor-pointer"
@@ -72,7 +80,7 @@ export default function ProvisionFeedModal({
               type="text"
               value={feedKey}
               onChange={(e) => setFeedKey(e.target.value)}
-              placeholder="e.g. led-status"
+              placeholder="e.g. led-intensity"
               className="w-full bg-slate-50 border border-slate-100 px-4 py-3 rounded-2xl text-sm font-medium text-slate-700 outline-none focus:border-blue-300 transition-all"
             />
           </div>
@@ -80,15 +88,15 @@ export default function ProvisionFeedModal({
 
         {/* Action Buttons */}
         <div className="flex flex-col items-center gap-4">
-          <button 
+          <button
             onClick={handleSubmit}
             className="w-full button-primary py-4 flex items-center justify-center gap-2 shadow-lg shadow-blue-100"
           >
             Complete Provisioning
             <ArrowRight size={18} />
           </button>
-          
-          <button 
+
+          <button
             onClick={onClose}
             className="text-sm font-bold text-blue-500 hover:text-blue-700 transition-colors py-2"
           >

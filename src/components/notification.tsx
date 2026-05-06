@@ -1,6 +1,6 @@
 "use client";
 
-import { Thermometer, Droplet, DoorOpen, Fan, Siren, Sun, Lightbulb, Globe } from "lucide-react";
+import { Thermometer, Droplet, DoorOpen, Fan, Siren, Sun, Globe } from "lucide-react";
 import { Notification } from "../types/noti";
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
@@ -30,7 +30,6 @@ export default function NotificationDropdown({ notifications, isOpen, onClose }:
         "Illuminance": <Sun size={18} className="text-yellow-500" />,
         "LED Intensity": <Siren size={18} className="text-orange-500" />,
         "Fan Speed": <Fan size={18} className="text-blue-700" />,
-        "LED Status": <Lightbulb size={18} className="text-yellow-500" />,
         "Servo": <DoorOpen size={18} className="text-gray-700" />,
     };  
 
