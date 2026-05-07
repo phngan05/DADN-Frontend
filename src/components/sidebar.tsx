@@ -4,7 +4,6 @@ import { useState } from "react";
 import { logout } from "../services/auth";
 import VoiceControlModal from "./voice";
 import DoorSetting from "./door-setting";
-import { useFeeds } from "../hooks/useFeeds";
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();

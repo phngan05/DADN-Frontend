@@ -1,7 +1,7 @@
 "use client";
 import SettingInput from "@/src/components/setting-input";
 import UserPhoto from "@/src/components/user-photo";
-import { Settings as SettingIcon, User as UserIcon, CloudSync, Orbit, Plus, Thermometer, Droplet, Sun, Siren, Fan, Lightbulb } from "lucide-react";
+import { Settings as SettingIcon, User as UserIcon, CloudSync, Orbit, Plus, Thermometer, Droplet, Sun, Siren, Fan} from "lucide-react";
 import ProvisionFeedModal from "@/src/components/add-new-feed";
 import { useFeeds } from "@/src/hooks/useFeeds";
 import { useEffect, useState } from "react";
@@ -20,7 +20,6 @@ export default function SettingPage() {
         "Illuminance": <Sun size={18} className="text-yellow-500" />,
         "LED Intensity": <Siren size={18} className="text-orange-500" />,
         "Fan Speed": <Fan size={18} className="text-blue-700" />,
-        "LED Status": <Lightbulb size={18} className="text-yellow-500" />,
         "Servo": <Orbit size={18} className="text-gray-700" />,
     };
     const [isProvisionOpen, setIsProvisionOpen] = useState(false);
