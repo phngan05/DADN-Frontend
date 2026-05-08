@@ -143,7 +143,7 @@ export function useDashboardControl(feedsData: Feed[] | null, latestValues: Reco
     try {
       const nextOn = !values.lightOn;
       if (statusFeed) await sendCommand(statusFeed.feed_key, nextOn ? 1 : 0);
-      if (intensityFeed) await sendCommand(intensityFeed.feed_key, nextOn ? Math.max(25, values.lightIntensity || 75) : 0);
+      if (intensityFeed) await sendCommand(intensityFeed.feed_key, nextOn ? 75 : 0);
     } catch (error) {
       console.error("Light toggle failed:", error);
       window.alert("Không thể gửi lệnh điều khiển đèn.");
