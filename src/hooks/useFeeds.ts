@@ -22,6 +22,8 @@ export function useFeeds() {
                 server_id: response.data[0].ADAFRUIT_SERVER.server_id,
                 username: response.data[0].ADAFRUIT_SERVER.username
             } : null);
+            console.log("Fetched feeds:", response.data);
+            console.log("Adafruit data:", response.data[0]?.ADAFRUIT_SERVER);
             return response.data;
         } catch (err: any) {
             const msg = err.response?.data?.detail || err.message || "Something went wrong";
