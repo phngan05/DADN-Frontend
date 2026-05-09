@@ -34,13 +34,13 @@ export function useUser() {
         }
     }, []);
 
-    const updateUserData = async () => {
+    const updateUserData = async (editedData: Partial<User>) => {
         setLoading(true);
         try {
             await apiClient.put(`/user`, {
-                full_name: userData.full_name,
-                username: userData.username,
-                photo_url: userData.photo_url,
+                full_name: editedData.full_name || userData.full_name,
+                username: editedData.username || userData.username,
+                photo_url: editedData.photo_url || userData.photo_url,
             });
             alert("User information updated successfully!");
             return true;
