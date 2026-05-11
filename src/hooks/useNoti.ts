@@ -44,7 +44,7 @@ export function useNotification() {
 
         eventSource.onerror = (err) => {
             console.error("SSE Connection Error:", err);
-            setError("Mất kết nối với máy chủ thông báo");
+            setError("Connection error. Please refresh the page.");
             setLoading(false);
             eventSource.close(); 
         };

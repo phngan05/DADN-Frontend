@@ -6,6 +6,8 @@ import { useDeviceControl } from "@/src/hooks/useDeviceControl";
 import { useFeeds } from "@/src/hooks/useFeeds";
 import { FeedCategory, Feed } from "@/src/types/feed";
 import { DashboardMode } from "@/src/types/dashboard";
+import {notify} from '@/src/utils/notify';
+
 
 declare global {
   interface Window {
@@ -124,16 +126,16 @@ export default function VoiceControlModal({
 
       if (command.includes("bật đèn") || command.includes("mở đèn")) {
         await updateStatus(ledIntensityFeedKey, 75);
-        alert("Turn on light successfully!");
+        notify.success("Turn on light successfully!");
       } else if (command.includes("tắt đèn")) {
         await updateStatus(ledIntensityFeedKey, 0);
-        alert("Turn off light successfully!");
+        notify.success("Turn off light successfully!");
       } else if (command.includes("bật quạt") || command.includes("mở quạt")) {
         await updateStatus(fanSpeedFeedKey, 70);
-        alert("Turn on fan successfully!");
+        notify.success("Turn on fan successfully!");
       } else if (command.includes("tắt quạt")) {
         await updateStatus(fanSpeedFeedKey, 0);
-        alert("Turn off fan successfully!");
+        notify.success("Turn off fan successfully!");
       }
     };
   }, [updateStatus, ledIntensityFeedKey, fanSpeedFeedKey, currentMode]);

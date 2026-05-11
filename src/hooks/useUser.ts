@@ -3,6 +3,8 @@ import apiClient from '@/src/services/api';
 import { User } from '../types/user';
 import Cookies from "js-cookie";
 import { useRouter } from 'next/navigation';
+import {notify} from '@/src/utils/notify';
+
 export function useUser() {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -42,11 +44,11 @@ export function useUser() {
                 username: editedData.username || userData.username,
                 photo_url: editedData.photo_url || userData.photo_url,
             });
-            alert("User information updated successfully!");
+            notify.success("User information updated successfully!");
             return true;
         } catch (error) {
             console.error("Error updating user data:", error);
-            alert("Failed to update user information.");
+            notify.error("Failed to update user information.");
             return false;
         } finally {
             setLoading(false);

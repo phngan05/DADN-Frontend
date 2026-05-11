@@ -12,7 +12,6 @@ export function useFaceID() {
         setError(null);
         try {
             const response = await apiClient.get(`/faceid`);
-            console.log("res: ", response.data);
             setFaceids(response.data.map((faceid: FaceID) => ({
                 id: faceid.id,
                 full_name: faceid.full_name,

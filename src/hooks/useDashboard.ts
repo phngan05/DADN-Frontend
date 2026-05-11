@@ -20,7 +20,6 @@ export function useDashboard() {
     }
   const handleMessage = useCallback((data: any) => {
     setLastEvent(data);
-    console.log("LastEvent: ", data)
   }, []);
 
   const { connected, send } = useWebSocket(

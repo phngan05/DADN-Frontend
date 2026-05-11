@@ -15,6 +15,9 @@ import {
 import { RegisterForm } from "@/src/types/auth";
 import { register } from "@/src/services/auth";
 import { AxiosError } from "axios";
+import {notify} from '@/src/utils/notify';
+
+
 export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -34,20 +37,19 @@ export default function RegisterPage() {
     setError("");
 
     try {
-      // Gửi JSON body cho endpoint /register
       if(formData.password !== confirmedPassword){
-        alert("Confirmed password is not the same as password!")
+        notify.error("Confirmed password is not the same as password!");
       }
       else{
         await register(formData);
-        alert("Register new account successfully!");
+        notify.success("Register new account successfully!");
       }
     } catch (err) {
       if (err instanceof AxiosError) {
       const detail = err.response?.data?.detail;
-      setError(Array.isArray(detail) ? detail[0].msg : detail || "Register failed!");
+      notify.error(Array.isArray(detail) ? detail[0].msg : detail || "Register failed!");
     } else {
-      setError("An unexpected error occurred");
+      notify.error("An unexpected error occurred");
     }
     } finally {
       setLoading(false);

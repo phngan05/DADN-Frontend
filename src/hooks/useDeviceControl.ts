@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import apiClient from '@/src/services/api';
+import {notify} from '@/src/utils/notify';
 
 export function useDeviceControl() {
     const [loading, setLoading] = useState(false);
@@ -15,7 +16,7 @@ export function useDeviceControl() {
             });
             return true;
         } catch (err: any) {
-            setError(err.message || "Something went wrong");
+            notify.error(err.message || "Something went wrong");
             return false;
         } finally {
             setLoading(false);
@@ -29,7 +30,7 @@ export function useDeviceControl() {
             
             return response.data;
         } catch (err: any) {
-            setError(err.message || "Incorrect Password!");
+            notify.error(err.message || "Incorrect Password!");
             return false;
         }
     }
@@ -42,7 +43,7 @@ export function useDeviceControl() {
             });
             return response.data            
         } catch (err: any) {
-            setError(err.message || "Update password failed!");
+            notify.error(err.message || "Update password failed!");
         }
     }
     return { updateStatus, verifyPassword, updatePassword, loading, error };

@@ -13,6 +13,7 @@ import {
   ArrowRight, 
   LayoutGrid 
 } from "lucide-react";
+import {notify} from '@/src/utils/notify';
 
 
 export default function LoginPage() {
@@ -31,10 +32,10 @@ export default function LoginPage() {
 
     try {
       await login(formData.username, formData.password);
+      notify.success("Login successful!");
       router.push("/");
     } catch (err) {
-      console.error(err);
-      setError("Thông tin đăng nhập không chính xác. Vui lòng thử lại.");
+      notify.error("Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }

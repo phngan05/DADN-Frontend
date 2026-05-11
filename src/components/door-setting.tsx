@@ -2,6 +2,7 @@ import { useDeviceControl } from "../hooks/useDeviceControl";
 import DoorPasswordModal from "./door-password";
 import ChangePasswordModal from "./change-password";
 import { useState } from "react";
+import {notify} from '@/src/utils/notify';
 
 interface DoorSettingProps {
   isOpen: boolean;
@@ -20,23 +21,22 @@ export default function DoorSetting({
         if(response){
             updatePassword(oldPassword, newPassword);
             setIsDoorOpen(true);
-            alert("Change Password successfully!")
+            notify.success("Change Password successfully!");
         }
         else{
-            alert("Incorrect old password!");
+            notify.error("Incorrect old password!");
         }
 
     };
     const handleOpenDoor = async (inputPassword: string) => {
       const response = await verifyPassword(inputPassword);
-      console.log("Response: ", response)
       if(response){
         await updateStatus("servo", 1);
-        alert("Open door successfully!");
+        notify.success("Open door successfully!");
 
       }
       else{
-        alert("Incorrect password!");
+        notify.error("Incorrect password!");
       }
       onClose();
     };

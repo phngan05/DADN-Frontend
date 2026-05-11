@@ -21,8 +21,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         if(!token){
           router.push("/login");
         }
-        // Awake MQTT session by making a request to the backend
-        console.log("Kích hoạt MQTT session...");
         await apiClient.get(`/record/all`);
 
       } catch (error) {

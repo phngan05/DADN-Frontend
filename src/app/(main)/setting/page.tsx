@@ -9,6 +9,9 @@ import { useUserContext } from "@/src/context/userContext";
 import { User } from "@/src/types/user";
 import { FeedCategory } from "@/src/types/feed";
 import ImageUploadButton from "@/src/components/update-photo";
+import {notify} from '@/src/utils/notify';
+
+
 export default function SettingPage() {
     const { userData, setUserData, updateUserData, loading } = useUserContext();
     const [editedUserData, setEditedUserData] = useState<User>(userData);
@@ -31,11 +34,11 @@ export default function SettingPage() {
     const handleProvision = async (data: { type: FeedCategory; key: string }) => {
         const response = await addNewFeed({ type: data.type, key: data.key });
         if (response) {
-            alert(`Feed "${data.type}" with key "${data.key}" has been provisioned!`);
+            notify.success(`Feed "${data.type}" has been provisioned!`);
             setIsProvisionOpen(false);
         }
         else{
-            alert("Failed to provision feed. Please try again.");
+            notify.error("Failed to provision feed. Please try again.");
             setIsProvisionOpen(true);
         }
     };
@@ -48,17 +51,17 @@ export default function SettingPage() {
         const newKey = prompt("Enter new feed key:", feed.feed_key);
         if (newKey && newKey.trim() !== "") {
             updateFeeds({ ...feed, feed_key: newKey.trim() });
+            notify.success(`Feed "${feed.category}" has been updated!`);
         }
     };
     const handleDeleteFeed = (feed: { feed_id: string; feed_key: string; category: FeedCategory }) => {
         if (confirm(`Are you sure you want to delete feed "${feed.category}"?`)) {
             deleteFeed(feed.feed_id);
+            notify.success(`Feed "${feed.category}" has been deleted!`);
         }
-
     };
 
     const handleUpdatePhoto = (url: string) => {
-        console.log("Ảnh mới đã upload tại:", url);
         setEditedUserData(prev => ({ ...prev, photo_url: url }))
     };
 
