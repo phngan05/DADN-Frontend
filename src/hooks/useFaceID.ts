@@ -2,6 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/src/services/api';
 import { FaceID } from '../types/faceid';
 
+const getErrorMessage = (err: unknown, fallback: string) => {
+    if (typeof err === "object" && err && "response" in err) {
+        const response = (err as { response?: { data?: { detail?: string } } }).response;
+        if (response?.data?.detail) return response.data.detail;
+    }
+    if (err instanceof Error) return err.message;
+    return fallback;
+};
+
 export function useFaceID() {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -21,8 +30,8 @@ export function useFaceID() {
                 created_at: faceid.created_at,
             })));
             return response.data;
-        } catch (err: any) {
-            const msg = err.response?.data?.detail || err.message || "Something went wrong";
+        } catch (err: unknown) {
+            const msg = getErrorMessage(err, "Something went wrong");
             setError(msg);
             return null;
         } finally {
@@ -47,37 +56,17 @@ export function useFaceID() {
                 ) || null
             );
             return response.data;
-        } catch (err: any) {
-            const msg = err.response?.data?.detail || err.message || "Something went wrong";
+        } catch (err: unknown) {
+            const msg = getErrorMessage(err, "Something went wrong");
             setError(msg);
             return null;
         }
     }, []);
 
-    const addNewFaceid = async () => {
-        try {
-            const response = await apiClient.post("/faceid");
-            const faceid: FaceID = response.data
-            setFaceids(prev => prev ? [...prev, {
-                id: faceid.id,
-                full_name: faceid.full_name,
-                is_active: faceid.is_active,
-                photo_url: faceid.photo_url,
-                created_at: faceid.created_at,
-            }] : null);
-            return true;
-        } catch (error) {
-            console.error("Error adding new faceid:", error);
-            alert("FaceID of this user is already exist!")
-            return false;
-        }
-    };
-
     return { 
         faceids,
         loading,
         error,
-        addNewFaceid,
         updateFaceidStatus,
         refreshFaceid: fetchFaceids
     };

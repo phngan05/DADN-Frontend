@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useWebSocket } from "./useWebsocket";
 import Cookies from "js-cookie"
-import { Feed } from "../types/feed";
+
+type LastEvent = {
+  feed?: string;
+  value?: string | number;
+};
 
 
 export function useDashboard() {
-    const [feedsData, setFeedsData] = useState<Feed[]>([]);
-    const [lastEvent, setLastEvent] = useState<any>(null);
+  const [lastEvent, setLastEvent] = useState<LastEvent | null>(null);
     const buildWsUrl = () => {
         const userId = Cookies.get("userId");
         const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -18,9 +21,12 @@ export function useDashboard() {
         const noApi = normalized.endsWith("/api") ? normalized.slice(0, -4) : normalized;
         return `${noApi.replace(/^http/, "ws")}/ws/${userId}`;
     }
-  const handleMessage = useCallback((data: any) => {
-    setLastEvent(data);
-    console.log("LastEvent: ", data)
+  const handleMessage = useCallback((data: unknown) => {
+    if (data && typeof data === "object") {
+      setLastEvent(data as LastEvent);
+      return;
+    }
+    setLastEvent(null);
   }, []);
 
   const { connected, send } = useWebSocket(
@@ -28,20 +34,8 @@ export function useDashboard() {
     handleMessage
   );
 
-  const feedByCategory = useMemo(() => {
-    const map: Record<string, Feed> = {};
-
-    for (const feed of feedsData ?? []) {
-      map[feed.category] = feed;
-    }
-
-    return map;
-  }, [feedsData]);
-
   return {
     connected,
-    feedsData,
-    feedByCategory,
     lastEvent,
     send,
   };

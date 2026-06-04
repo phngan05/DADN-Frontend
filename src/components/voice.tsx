@@ -1,34 +1,55 @@
-"use client";
+// "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AlertTriangle, Mic, X } from "lucide-react";
 import { useDeviceControl } from "@/src/hooks/useDeviceControl";
 import { useFeeds } from "@/src/hooks/useFeeds";
 import { FeedCategory, Feed } from "@/src/types/feed";
 import { DashboardMode } from "@/src/types/dashboard";
+import apiClient from "@/src/services/api";
 
 declare global {
   interface Window {
-    webkitSpeechRecognition: any;
-    SpeechRecognition: any;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+    SpeechRecognition?: SpeechRecognitionConstructor;
   }
 }
+
+type SpeechRecognitionAlternativeLike = {
+  transcript: string;
+};
+
+type SpeechRecognitionResultLike = {
+  0: SpeechRecognitionAlternativeLike;
+  length: number;
+};
+
+type SpeechRecognitionEventLike = {
+  results: ArrayLike<SpeechRecognitionResultLike>;
+};
+
+type SpeechRecognitionErrorEventLike = {
+  error?: string;
+};
+
+type SpeechRecognitionLike = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onend: (() => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionLike;
 
 interface VoiceControlModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-const DASHBOARD_MODE_STORAGE_KEY = "dashboard-mode";
-
-const getStoredDashboardMode = (): DashboardMode => {
-  if (typeof window === "undefined") return "manual";
-
-  const storedMode = window.localStorage.getItem(DASHBOARD_MODE_STORAGE_KEY);
-  return storedMode === "automatic" || storedMode === "manual"
-    ? storedMode
-    : "manual";
-};
 
 export default function VoiceControlModal({
   isOpen,
@@ -36,13 +57,12 @@ export default function VoiceControlModal({
 }: VoiceControlModalProps) {
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState("");
-  const [currentMode, setCurrentMode] = useState<DashboardMode>(
-    getStoredDashboardMode,
-  );
+  const [currentMode, setCurrentMode] = useState<DashboardMode>("manual");
+  const [isModeLoading, setIsModeLoading] = useState(true);
   const [showAutoModeWarning, setShowAutoModeWarning] = useState(false);
   const { updateStatus, loading } = useDeviceControl();
   const { feedsData } = useFeeds();
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const processCommandRef = useRef<(cmd: string) => Promise<void>>(
     async () => {},
   );
@@ -59,53 +79,55 @@ export default function VoiceControlModal({
     feedByCategory["LED Intensity"]?.feed_key ?? "led-intensity";
   const fanSpeedFeedKey = feedByCategory["Fan Speed"]?.feed_key ?? "fan-speed";
 
-  const stopListening = () => {
+  const stopListening = useCallback(() => {
     setIsListening(false);
     recognitionRef.current?.stop();
-  };
+  }, []);
 
-  const showAutomaticModePopup = () => {
+  const showAutomaticModePopup = useCallback(() => {
     stopListening();
     setShowAutoModeWarning(true);
-  };
+  }, [stopListening]);
 
-  useEffect(() => {
-    const syncMode = () => setCurrentMode(getStoredDashboardMode());
+  const syncModeFromBackend = useCallback(async (): Promise<DashboardMode> => {
+    setIsModeLoading(true);
 
-    syncMode();
+    try {
+      const response = await apiClient.get("/record/auto/status");
 
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === DASHBOARD_MODE_STORAGE_KEY) {
-        syncMode();
-      }
-    };
+      const syncedMode: DashboardMode = response.data?.auto_mode
+        ? "automatic"
+        : "manual";
 
-    const handleDashboardModeChange = (event: Event) => {
-      const mode = (event as CustomEvent<DashboardMode>).detail;
-      if (mode === "automatic" || mode === "manual") {
-        setCurrentMode(mode);
-      } else {
-        syncMode();
-      }
-    };
+      setCurrentMode(syncedMode);
+      return syncedMode;
+    } catch (error) {
+      console.error("Cannot sync dashboard mode from backend:", error);
 
-    window.addEventListener("storage", handleStorageChange);
-    window.addEventListener("dashboard-mode-change", handleDashboardModeChange);
+      // Nếu không hỏi được backend, chặn điều khiển để tránh gửi lệnh khi hệ thống có thể đang Auto.
+      setCurrentMode("automatic");
+      return "automatic";
+    } finally {
+      setIsModeLoading(false);
+    }
+  }, []);
 
-    return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener(
-        "dashboard-mode-change",
-        handleDashboardModeChange,
-      );
-    };
+  const switchToManualMode = useCallback(async () => {
+    try {
+      await apiClient.put("/record/auto?enabled=false");
+      setCurrentMode("manual");
+      setShowAutoModeWarning(false);
+    } catch (error) {
+      console.error("Cannot switch to manual mode:", error);
+      window.alert("Không thể chuyển sang Manual. Vui lòng thử lại.");
+    }
   }, []);
 
   useEffect(() => {
     if (isOpen) {
-      setCurrentMode(getStoredDashboardMode());
+      void syncModeFromBackend();
     }
-  }, [isOpen]);
+  }, [isOpen, syncModeFromBackend]);
 
   useEffect(() => {
     processCommandRef.current = async (command: string) => {
@@ -117,9 +139,13 @@ export default function VoiceControlModal({
         command.includes("mở quạt") ||
         command.includes("tắt quạt");
 
-      if (isDeviceControlCommand && currentMode === "automatic") {
-        showAutomaticModePopup();
-        return;
+      if (isDeviceControlCommand) {
+        const latestMode = await syncModeFromBackend();
+
+        if (latestMode === "automatic") {
+          showAutomaticModePopup();
+          return;
+        }
       }
 
       if (command.includes("bật đèn") || command.includes("mở đèn")) {
@@ -136,7 +162,7 @@ export default function VoiceControlModal({
         alert("Turn off fan successfully!");
       }
     };
-  }, [updateStatus, ledIntensityFeedKey, fanSpeedFeedKey, currentMode]);
+  }, [updateStatus, ledIntensityFeedKey, fanSpeedFeedKey, syncModeFromBackend, showAutomaticModePopup]);
 
   useEffect(() => {
     // Initiate Speech Recognition
@@ -149,28 +175,31 @@ export default function VoiceControlModal({
       recognitionRef.current.continuous = false;
       recognitionRef.current.interimResults = false;
 
-      recognitionRef.current.onresult = (event: any) => {
-        const text = event.results[0][0].transcript.toLowerCase();
+      recognitionRef.current.onresult = (event: SpeechRecognitionEventLike) => {
+        const transcript = event.results[0]?.[0]?.transcript ?? "";
+        const text = transcript.toLowerCase();
         setTranscript(text);
-        processCommandRef.current(text);
+        void processCommandRef.current(text);
       };
 
       recognitionRef.current.onend = () => {
         setIsListening(false);
       };
 
-      recognitionRef.current.onerror = (event: any) => {
+      recognitionRef.current.onerror = (event: SpeechRecognitionErrorEventLike) => {
         console.error("Lỗi nhận diện:", event.error);
         setIsListening(false);
       };
     }
   }, []);
 
-  const toggleListen = () => {
+  const toggleListen = async () => {
     if (isListening) {
       stopListening();
     } else {
-      if (currentMode === "automatic") {
+      const latestMode = await syncModeFromBackend();
+
+      if (latestMode === "automatic") {
         showAutomaticModePopup();
         return;
       }
@@ -221,12 +250,21 @@ export default function VoiceControlModal({
             khi dùng Voice Control.
           </p>
 
-          <button
-            onClick={handleClose}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-blue-100 transition-all active:scale-95"
-          >
-            I understand
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={handleClose}
+              className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 py-3.5 rounded-2xl font-bold text-sm transition-all active:scale-95"
+            >
+              Hủy
+            </button>
+
+            <button
+              onClick={switchToManualMode}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-bold text-sm shadow-lg shadow-blue-100 transition-all active:scale-95"
+            >
+              Chuyển Manual
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -292,12 +330,14 @@ export default function VoiceControlModal({
             </button>
 
             <button
-              disabled={loading}
+              disabled={loading || isModeLoading}
               onClick={toggleListen}
               className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl flex items-center gap-3 shadow-lg shadow-blue-200 transition-all active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Mic size={20} />
-              <span className="font-bold text-sm">Speak Now</span>
+              <span className="font-bold text-sm">
+                {isModeLoading ? "Checking Mode..." : "Speak Now"}
+              </span>
             </button>
           </div>
         </div>
