@@ -2,6 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/src/services/api';
 import { Adafruit, Feed, FeedCategory } from '../types/feed';
 
+const getErrorMessage = (err: unknown, fallback: string) => {
+    if (typeof err === "object" && err && "response" in err) {
+        const response = (err as { response?: { data?: { detail?: string } } }).response;
+        if (response?.data?.detail) return response.data.detail;
+    }
+    if (err instanceof Error) return err.message;
+    return fallback;
+};
+
 export function useFeeds() {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -23,8 +32,8 @@ export function useFeeds() {
                 username: response.data[0].ADAFRUIT_SERVER.username
             } : null);
             return response.data;
-        } catch (err: any) {
-            const msg = err.response?.data?.detail || err.message || "Something went wrong";
+        } catch (err: unknown) {
+            const msg = getErrorMessage(err, "Something went wrong");
             setError(msg);
             return null;
         } finally {
@@ -45,10 +54,12 @@ export function useFeeds() {
                 category: newFeeds.category
             });
             console.log("Updated feed:", response.data);
-            setFeedsData(feedsData?.map(feed => feed.feed_id === newFeeds.feed_id ? newFeeds : feed) || null);
+            setFeedsData(prev =>
+                prev?.map(feed => feed.feed_id === newFeeds.feed_id ? newFeeds : feed) || null
+            );
             return response.data;
-        } catch (err: any) {
-            const msg = err.response?.data?.detail || err.message || "Something went wrong";
+        } catch (err: unknown) {
+            const msg = getErrorMessage(err, "Something went wrong");
             setError(msg);
             return null;
         }
@@ -59,8 +70,8 @@ export function useFeeds() {
             await apiClient.delete(`/feed/${feedId}`);
             setFeedsData(feedsData?.filter(feed => feed.feed_id !== feedId) || null);
             return true;
-        } catch (err: any) {
-            const msg = err.response?.data?.detail || err.message || "Something went wrong";
+        } catch (err: unknown) {
+            const msg = getErrorMessage(err, "Something went wrong");
             setError(msg);
             return false;
         }

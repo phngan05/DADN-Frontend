@@ -6,12 +6,14 @@ interface DoorPasswordModalProps {
   onClose: () => void;
   onCompleted: (inputPassword: string) => void
   onChangePassword: () => void;
+  onFaceUnlock: () => void;
 }
 
 export default function DoorPasswordModal({
   onClose,
   onCompleted,
   onChangePassword,
+  onFaceUnlock,
 }: DoorPasswordModalProps) {
     const [password, setPassword] = useState("");
   
@@ -45,6 +47,12 @@ export default function DoorPasswordModal({
             className="px-2 mt-2 text-blue-600 flex items-center gap-1 text-xs font-bold hover:underline">
             Change password
         </button>
+          <button
+            onClick={onFaceUnlock}
+            className="px-2 mt-2 text-blue-600 flex items-center gap-1 text-xs font-bold hover:underline"
+          >
+            Use face unlock
+          </button>
         </div>
 
         {/* Action Buttons */}

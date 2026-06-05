@@ -3,6 +3,15 @@ import apiClient from '@/src/services/api';
 import { User } from '../types/user';
 import Cookies from "js-cookie";
 import { useRouter } from 'next/navigation';
+
+const getErrorMessage = (err: unknown, fallback: string) => {
+    if (typeof err === "object" && err && "response" in err) {
+        const response = (err as { response?: { data?: { detail?: string } } }).response;
+        if (response?.data?.detail) return response.data.detail;
+    }
+    if (err instanceof Error) return err.message;
+    return fallback;
+};
 export function useUser() {
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -25,23 +34,25 @@ export function useUser() {
             const response = await apiClient.get(`/user`);
             setUserData(response.data);
             return response.data;
-        } catch (err: any) {
-            const msg = err.response?.data?.detail || err.message || "Something went wrong";
+        } catch (err: unknown) {
+            const msg = getErrorMessage(err, "Something went wrong");
             setError(msg);
             return null;
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [router]);
 
-    const updateUserData = async () => {
+    const updateUserData = async (nextUser?: User) => {
         setLoading(true);
         try {
+            const payload = nextUser ?? userData;
             await apiClient.put(`/user`, {
-                full_name: userData.full_name,
-                username: userData.username,
-                photo_url: userData.photo_url,
+                full_name: payload.full_name,
+                username: payload.username,
+                photo_url: payload.photo_url,
             });
+            setUserData(payload);
             alert("User information updated successfully!");
             return true;
         } catch (error) {

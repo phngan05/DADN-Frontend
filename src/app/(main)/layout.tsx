@@ -20,6 +20,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         const token = Cookies.get("token")
         if(!token){
           router.push("/login");
+          return;
         }
         // Awake MQTT session by making a request to the backend
         console.log("Kích hoạt MQTT session...");
@@ -30,7 +31,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       }
     };
     initMQTTSession();
-  }, []);
+  }, [router]);
   
   return (
     <UserContext.Provider value={
@@ -44,7 +45,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         updateRead,
       }
       }>
-    <div className="flex h-screen overflow-hidden bg-slate-50 text-slate-900">
+    <div suppressHydrationWarning className="flex h-screen overflow-hidden bg-slate-50 text-slate-900">
       {/* Fixed Sidebar */}
       <aside className="w-64 h-screen sticky top-0 flex-shrink-0 border-r bg-white z-20">
         <Sidebar />

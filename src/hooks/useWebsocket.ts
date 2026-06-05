@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 
-export function useWebSocket(url: string, onMessage?: (data: any) => void) {
+export function useWebSocket(url: string, onMessage?: (data: unknown) => void) {
   const wsRef = useRef<WebSocket | null>(null);
   const onMessageRef = useRef(onMessage);
   const [connected, setConnected] = useState(false);
@@ -12,6 +12,10 @@ export function useWebSocket(url: string, onMessage?: (data: any) => void) {
   }, [onMessage]);
 
   useEffect(() => {
+    if (!url) {
+      setConnected(false);
+      return;
+    }
     const ws = new WebSocket(url);
     wsRef.current = ws;
 
@@ -21,7 +25,7 @@ export function useWebSocket(url: string, onMessage?: (data: any) => void) {
       try {
         const data = JSON.parse(event.data);
         onMessageRef.current?.(data);
-      } catch (e) {
+      } catch {
         console.error("Invalid message");
       }
     };
@@ -33,7 +37,7 @@ export function useWebSocket(url: string, onMessage?: (data: any) => void) {
     };
   }, [url]);
 
-  const send = (data: any) => {
+  const send = (data: unknown) => {
     wsRef.current?.send(JSON.stringify(data));
   };
 

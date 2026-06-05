@@ -1,22 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { MoreVertical, Plus } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import { useFaceID } from "@/src/hooks/useFaceID";
 import UserPhoto from "@/src/components/user-photo";
 
 export default function FaceManagementPage() {
   const {faceids,
-        addNewFaceid,
         updateFaceidStatus} = useFaceID()
 
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const handleAddFaceID = async () => {
-    if (confirm(`Add your FaceID information?`)) {
-      await addNewFaceid();
-    }
-
-  }
 
   const handleChangeStatus = async (id: string, isActive: boolean) => {
     const message = `You want to ${isActive? "inactivate" : "activate"} this FaceID?`
@@ -35,13 +28,6 @@ export default function FaceManagementPage() {
           <p className="text-slate-500 text-sm mt-1">
             Manage biometric access profiles for your smart habitat.
           </p>
-          <div className="flex justify-end rounded-2xl">
-            <button 
-            onClick={handleAddFaceID}
-            className="flex px-6 py-2 button-primary gap-2">
-              <Plus size={16} className="y-space-2"/> Add new FaceID
-            </button>
-        </div>
         </div>
         
         {/* Table */}

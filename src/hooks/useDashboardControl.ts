@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import {
+  useState,
+  useCallback,
+  useEffect,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import apiClient from "@/src/services/api";
 import { useHistoryData } from "./useHistoryData";
 import { useDeviceControl } from "./useDeviceControl";
@@ -16,27 +22,17 @@ interface LastEvent {
   value?: string | number;
 }
 
-const DASHBOARD_MODE_STORAGE_KEY = "dashboard-mode";
-
-const getInitialMode = (): DashboardMode => {
-  if (typeof window === "undefined") return "manual";
-
-  const storedMode = window.localStorage.getItem(DASHBOARD_MODE_STORAGE_KEY);
-  return storedMode === "automatic" || storedMode === "manual"
-    ? storedMode
-    : "manual";
-};
-
 export function useDashboardControl(
   feedsData: Feed[] | null,
   latestValues: Record<string, string | number>,
-  setLatestValues: React.Dispatch<
-    React.SetStateAction<Record<string, string | number>>
-  >,
+  setLatestValues: Dispatch<SetStateAction<Record<string, string | number>>>,
   lastEvent: LastEvent | null,
 ) {
   const { toNumber, normalizeHistory } = useHistoryData();
-  const [mode, setMode] = useState<DashboardMode>(getInitialMode);
+
+  // Không lấy mode từ localStorage nữa.
+  // Giá trị này sẽ được đồng bộ lại từ backend bằng loadMode().
+  const [mode, setMode] = useState<DashboardMode>("manual");
   const [historyRange, setHistoryRange] = useState<HistoryRange>("24h");
   const [historyMap, setHistoryMap] = useState<
     Record<FeedCategory, HistoryPoint[]>
@@ -51,18 +47,6 @@ export function useDashboardControl(
   const [lightDraft, setLightDraft] = useState(0);
   const [fanDraft, setFanDraft] = useState(0);
   const { updateStatus } = useDeviceControl();
-
-  // Sync mode so Sidebar / Voice Control can know whether dashboard is in Automatic mode
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    window.localStorage.setItem(DASHBOARD_MODE_STORAGE_KEY, mode);
-    window.dispatchEvent(
-      new CustomEvent("dashboard-mode-change", {
-        detail: mode,
-      }),
-    );
-  }, [mode]);
 
   // Update latest values from websocket
   useEffect(() => {
@@ -133,6 +117,18 @@ export function useDashboardControl(
     }));
   }, [setLatestValues]);
 
+  // Load backend mode. Đây là source-of-truth, không dùng localStorage.
+  const loadMode = useCallback(async () => {
+    const response = await apiClient.get("/record/auto/status");
+
+    const syncedMode: DashboardMode = response.data?.auto_mode
+      ? "automatic"
+      : "manual";
+
+    setMode(syncedMode);
+    return syncedMode;
+  }, []);
+
   // Load history
   const loadHistory = useCallback(
     async (feedList: Feed[], range: HistoryRange) => {
@@ -171,22 +167,67 @@ export function useDashboardControl(
   // Send command
   const sendCommand = useCallback(
     async (feedKey: string, value: number) => {
-      await updateStatus(feedKey, value);
+      const ok = await updateStatus(feedKey, value);
+
+      if (!ok) {
+        throw new Error("Backend rejected device update");
+      }
+
       setLatestValues((prev) => ({ ...prev, [feedKey]: value }));
     },
     [updateStatus, setLatestValues],
   );
 
-  // Request manual mode
-  const requestManualMode = useCallback(() => {
-    if (mode === "manual") return true;
+  // Change mode through backend, then sync UI from backend response.
+  const setBackendMode = useCallback(
+    async (newMode: DashboardMode) => {
+      const response = await apiClient.put(
+        newMode === "automatic"
+          ? "/record/auto?enabled=true"
+          : "/record/auto?enabled=false",
+      );
+
+      const autoMode =
+        typeof response.data?.auto_mode === "boolean"
+          ? response.data.auto_mode
+          : newMode === "automatic";
+
+      const syncedMode: DashboardMode = autoMode ? "automatic" : "manual";
+      setMode(syncedMode);
+
+      const result = response.data?.result;
+      const fanFeed = result?.fan;
+      const ledFeed = result?.led;
+
+      setLatestValues((prev) => ({
+        ...prev,
+        ...(fanFeed?.feed ? { [fanFeed.feed]: fanFeed.value } : {}),
+        ...(ledFeed?.feed ? { [ledFeed.feed]: ledFeed.value } : {}),
+      }));
+
+      await loadSnapshot();
+      return syncedMode;
+    },
+    [loadSnapshot, setLatestValues],
+  );
+
+  // Request manual mode.
+  // Nếu backend đang Auto thì hỏi popup.
+  // Người dùng đồng ý thì mới gọi backend tắt Auto.
+  const requestManualMode = useCallback(async () => {
+    const latestMode = await loadMode();
+
+    if (latestMode === "manual") return true;
+
     const accepted = window.confirm(
       "Hệ thống đang ở chế độ Automatic. Bạn có muốn chuyển sang Manual để tiếp tục điều khiển không?",
     );
+
     if (!accepted) return false;
-    setMode("manual");
-    return true;
-  }, [mode]);
+
+    const syncedMode = await setBackendMode("manual");
+    return syncedMode === "manual";
+  }, [loadMode, setBackendMode]);
 
   // Light toggle: LED Intensity = 0 means OFF, LED Intensity > 0 means ON
   const handleLightToggle = useCallback(async () => {
@@ -195,7 +236,7 @@ export function useDashboardControl(
     const intensityFeed = feeds["LED Intensity"];
 
     if (!intensityFeed) return;
-    if (!requestManualMode()) return;
+    if (!(await requestManualMode())) return;
 
     try {
       const nextValue = values.lightOn
@@ -216,7 +257,7 @@ export function useDashboardControl(
       const intensityFeed = feeds["LED Intensity"];
 
       if (!intensityFeed) return;
-      if (!requestManualMode()) {
+      if (!(await requestManualMode())) {
         setLightDraft(values.lightIntensity);
         return;
       }
@@ -239,7 +280,7 @@ export function useDashboardControl(
     const fanFeed = feeds["Fan Speed"];
 
     if (!fanFeed) return;
-    if (!requestManualMode()) return;
+    if (!(await requestManualMode())) return;
 
     try {
       await sendCommand(
@@ -260,7 +301,7 @@ export function useDashboardControl(
       const fanFeed = feeds["Fan Speed"];
 
       if (!fanFeed) return;
-      if (!requestManualMode()) {
+      if (!(await requestManualMode())) {
         setFanDraft(values.fanSpeed);
         return;
       }
@@ -279,30 +320,15 @@ export function useDashboardControl(
   // Mode change
   const handleModeChange = useCallback(
     async (newMode: "automatic" | "manual") => {
-      setMode(newMode);
       try {
-        const response = await apiClient.put(
-          newMode === "automatic"
-            ? "record/auto?enabled=true"
-            : "record/auto?enabled=false",
-        );
-
-        const result = response.data?.result;
-        const fanFeed = result?.fan;
-        const ledFeed = result?.led;
-
-        setLatestValues((prev) => ({
-          ...prev,
-          ...(fanFeed?.feed ? { [fanFeed.feed]: fanFeed.value } : {}),
-          ...(ledFeed?.feed ? { [ledFeed.feed]: ledFeed.value } : {}),
-        }));
-
-        await loadSnapshot();
+        await setBackendMode(newMode);
       } catch (error) {
         console.error("Mode change error:", error);
+        await loadMode().catch(() => undefined);
+        window.alert("Không thể đổi chế độ. Vui lòng thử lại.");
       }
     },
-    [loadSnapshot, setLatestValues],
+    [setBackendMode, loadMode],
   );
 
   return {
@@ -316,6 +342,7 @@ export function useDashboardControl(
     setFanDraft,
     loadFeeds,
     loadSnapshot,
+    loadMode,
     loadHistory,
     handleLightToggle,
     handleLightCommit,
@@ -325,3 +352,4 @@ export function useDashboardControl(
     getDeviceValues,
   };
 }
+

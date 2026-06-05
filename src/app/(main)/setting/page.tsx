@@ -10,7 +10,7 @@ import { User } from "@/src/types/user";
 import { FeedCategory } from "@/src/types/feed";
 import ImageUploadButton from "@/src/components/update-photo";
 export default function SettingPage() {
-    const { userData, setUserData, updateUserData, loading } = useUserContext();
+    const { userData, updateUserData, loading } = useUserContext();
     const [editedUserData, setEditedUserData] = useState<User>(userData);
     const { feedsData, adafruitData, addNewFeed, updateFeeds, deleteFeed } = useFeeds();
     const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -25,8 +25,7 @@ export default function SettingPage() {
     const [isProvisionOpen, setIsProvisionOpen] = useState(false);
 
     const handleUpdateUser = async () => {
-        setUserData(editedUserData);
-        await updateUserData();
+        await updateUserData(editedUserData);
     };
     const handleProvision = async (data: { type: FeedCategory; key: string }) => {
         const response = await addNewFeed({ type: data.type, key: data.key });
