@@ -142,7 +142,7 @@ export function normalizeHistory(payload: unknown, range: HistoryRange): History
 /**
  * Custom hook for history data management
  */
-export function useHistoryData(initialRange: HistoryRange = "24h") {
+export function useHistoryData() {
   const getEmptyHistory = useCallback(
     (range: HistoryRange) => normalizeHistory([], range),
     []

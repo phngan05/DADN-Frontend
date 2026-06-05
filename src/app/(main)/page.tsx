@@ -45,6 +45,7 @@ export default function DashboardPage() {
     setFanDraft,
     loadFeeds,
     loadSnapshot,
+    loadMode,
     loadHistory,
     handleLightToggle,
     handleLightCommit,
@@ -59,14 +60,14 @@ export default function DashboardPage() {
     const init = async () => {
       try {
         const feedList = await loadFeeds();
-        await Promise.all([loadSnapshot(), loadHistory(feedList, historyRange)]);
+        await Promise.all([loadSnapshot(), loadMode(), loadHistory(feedList, historyRange)]);
       } catch (error) {
         console.error("Dashboard init failed:", error);
       }
     };
 
     void init();
-  }, [historyRange, loadFeeds, loadHistory, loadSnapshot]);
+  }, [historyRange, loadFeeds, loadHistory, loadMode, loadSnapshot]);
 
   // Feed by category
   const feedByCategory = useMemo(() => {

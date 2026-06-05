@@ -13,7 +13,7 @@ import {notify} from '@/src/utils/notify';
 
 
 export default function SettingPage() {
-    const { userData, setUserData, updateUserData, loading } = useUserContext();
+    const { userData, updateUserData, loading } = useUserContext();
     const [editedUserData, setEditedUserData] = useState<User>(userData);
     const { feedsData, adafruitData, addNewFeed, updateFeeds, deleteFeed } = useFeeds();
     const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -28,7 +28,6 @@ export default function SettingPage() {
     const [isProvisionOpen, setIsProvisionOpen] = useState(false);
 
     const handleUpdateUser = async () => {
-        setUserData(editedUserData);
         await updateUserData(editedUserData);
     };
     const handleProvision = async (data: { type: FeedCategory; key: string }) => {

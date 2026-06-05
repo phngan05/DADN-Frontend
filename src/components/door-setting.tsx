@@ -1,8 +1,9 @@
 import { useDeviceControl } from "../hooks/useDeviceControl";
 import DoorPasswordModal from "./door-password";
 import ChangePasswordModal from "./change-password";
-import { useState } from "react";
 import {notify} from '@/src/utils/notify';
+import FaceUnlockModal from "./face-unlock";
+import { useEffect, useState } from "react";
 
 interface DoorSettingProps {
   isOpen: boolean;
@@ -14,14 +15,20 @@ export default function DoorSetting({
   onClose,
 }: DoorSettingProps){
     const {verifyPassword, updateStatus, updatePassword} = useDeviceControl();
-    const [isDoorOpen, setIsDoorOpen] = useState<boolean>(true);
+  const [activeView, setActiveView] = useState<"password" | "change-password" | "face">("password");
+  useEffect(() => {
+    if (isOpen) {
+      setActiveView("password");
+    }
+  }, [isOpen]);
     if(!isOpen) return null;
     const handleChangePassword = async (oldPassword: string, newPassword: string) => {
         const response = await verifyPassword(oldPassword);
         if(response){
-            updatePassword(oldPassword, newPassword);
-            setIsDoorOpen(true);
-            notify.success("Change Password successfully!");
+          updatePassword(oldPassword, newPassword);
+          setActiveView("password");
+          notify.success("Change Password successfully!");
+
         }
         else{
             notify.error("Incorrect old password!");
@@ -42,15 +49,24 @@ export default function DoorSetting({
     };
     return (
         <div>
-        {isDoorOpen? 
+        {activeView === "password" && (
         <DoorPasswordModal 
         onClose={onClose} 
         onCompleted={handleOpenDoor}
-        onChangePassword={() => setIsDoorOpen(false)}/> 
-        : 
+        onChangePassword={() => setActiveView("change-password")}
+        onFaceUnlock={() => setActiveView("face")}
+        />
+        )}
+        {activeView === "change-password" && (
         <ChangePasswordModal 
-        onClose={() => setIsDoorOpen(true)} 
-        onCompleted={handleChangePassword}/>}
+        onClose={() => setActiveView("password")} 
+        onCompleted={handleChangePassword}/>
+        )}
+        <FaceUnlockModal
+        isOpen={activeView === "face"}
+        onClose={onClose}
+        onBack={() => setActiveView("password")}
+        />
         </div>
     );
 };

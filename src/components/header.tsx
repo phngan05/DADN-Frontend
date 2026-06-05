@@ -7,15 +7,19 @@ import NotificationDropdown from "./notification";
 import { useUserContext } from "../context/userContext";
 import { Notification } from "../types/noti";
 export default function Header() {
-  const date = new Date();
   const { userData, loading, notifications, updateRead } = useUserContext();
   const [showNotifications, setShowNotifications] = useState(false);
   const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const hours = date.getHours();
-  const ampm = hours >= 12 ? "PM" : "AM";
-  const displayHours = hours % 12 || 12;
   const [unreadCount, setUnreadCount] = useState(0);
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => {
+    const updateNow = () => setNow(new Date());
+    updateNow();
+    const intervalId = setInterval(updateNow, 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     if (notifications) {
@@ -31,15 +35,27 @@ export default function Header() {
     }
   }
 
+  const displayDate = now
+    ? `${dayNames[now.getDay()]}, ${monthNames[now.getMonth()]} ${now.getDate()}`
+    : "--";
+  const hours = now?.getHours();
+  const displayHours = typeof hours === "number" ? hours % 12 || 12 : "--";
+  const minutes = now?.getMinutes();
+  const displayMinutes = typeof minutes === "number" ? minutes.toString().padStart(2, "0") : "--";
+  const ampm = typeof hours === "number" && hours >= 12 ? "PM" : "AM";
+  const displayTime = `${displayHours.toString().padStart(2, "0")}:${displayMinutes}${
+    now ? ` ${ampm}` : ""
+  }`;
+
   return (
     <header className="flex justify-between items-center bg-white px-8 py-4 border-b border-gray-50">
       <div className="flex items-center gap-3 text-blue-900 border-l-2 border-blue-100 pl-4">
         <p className="text-xs font-semibold text-gray-400">
-          {dayNames[date.getDay()]}, {monthNames[date.getMonth()]} {date.getDate()}
+          {displayDate}
         </p>
         <div className="flex items-center gap-1 font-bold">
           <Clock size={16} className="text-blue-500" />
-          <span>{displayHours.toString().padStart(2, '0')}:{date.getMinutes().toString().padStart(2, '0')} {ampm}</span>
+          <span>{displayTime}</span>
         </div>
       </div>
 

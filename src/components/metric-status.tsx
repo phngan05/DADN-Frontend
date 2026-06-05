@@ -1,4 +1,3 @@
-import React from "react";
 import { FeedCategory } from "../types/feed";
 
 export default function metricStatus(category: FeedCategory, value: number | null) {

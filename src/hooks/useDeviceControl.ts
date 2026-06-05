@@ -2,6 +2,15 @@ import { useState } from 'react';
 import apiClient from '@/src/services/api';
 import {notify} from '@/src/utils/notify';
 
+const getErrorMessage = (err: unknown, fallback: string) => {
+    if (typeof err === "object" && err && "response" in err) {
+        const response = (err as { response?: { data?: { detail?: string } } }).response;
+        if (response?.data?.detail) return response.data.detail;
+    }
+    if (err instanceof Error) return err.message;
+    return fallback;
+};
+
 export function useDeviceControl() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -10,7 +19,7 @@ export function useDeviceControl() {
         setLoading(true);
         setError(null);
         try {
-            await apiClient.put(`record`, {
+            await apiClient.put(`/record`, {
                 feed_key: feed_key,
                 value: value,
             });
