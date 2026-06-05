@@ -2,6 +2,8 @@
 
 import React, { useRef, useState } from "react";
 import { Camera, Loader2 } from "lucide-react";
+import {notify} from '@/src/utils/notify';
+
 
 interface ImageUploadButtonProps {
   onUploadSuccess: (url: string) => void;
@@ -36,11 +38,10 @@ export default function ImageUploadButton({ onUploadSuccess }: ImageUploadButton
       if (data.success) {
         onUploadSuccess(data.data.url);
       } else {
-        alert("Upload failed: " + data.error.message);
+        notify.error("Upload failed: " + data.error.message);
       }
     } catch (error) {
-      console.error("Error uploading to ImgBB:", error);
-      alert("An error occurred while uploading.");
+      notify.error("An error occurred while uploading.");
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";

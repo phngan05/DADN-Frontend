@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, Image as ImageIcon, Loader2, RefreshCw, X } from "lucide-react";
 import Image from "next/image";
 import apiClient from "@/src/services/api";
+import { notify } from "../utils/notify";
 
 interface FaceUnlockModalProps {
   isOpen: boolean;
@@ -151,18 +152,19 @@ export default function FaceUnlockModal({
             feed_key: "servo",
             value: 1,
           });
-          alert("Face verified. Door request sent.");
+          notify.success("Face verified. Door request sent.");
           onClose();
         } catch (err: unknown) {
           const msg = getErrorMessage(err, "Door request failed.");
           setError(msg);
+          notify.error("Door request failed.")
         }
       } else {
         const percent =
           typeof confidence === "number"
             ? ` (${Math.round(confidence * 100)}%)`
             : "";
-        alert(`Face not recognized${percent}.`);
+        notify.error(`Face not recognized${percent}.`);
       }
     } catch (err: unknown) {
       const msg = getErrorMessage(err, "Face verification failed.");

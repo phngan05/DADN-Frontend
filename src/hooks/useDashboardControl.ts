@@ -16,6 +16,8 @@ import {
   HistoryPoint,
   DashboardMode,
 } from "@/src/types/dashboard";
+import {notify} from '@/src/utils/notify';
+
 
 interface LastEvent {
   feed?: string;
@@ -245,7 +247,7 @@ export function useDashboardControl(
       await sendCommand(intensityFeed.feed_key, nextValue);
     } catch (error) {
       console.error("Light toggle failed:", error);
-      window.alert("Không thể gửi lệnh điều khiển đèn.");
+      notify.error("Không thể gửi lệnh điều khiển đèn.");
     }
   }, [feedByCategory, getDeviceValues, requestManualMode, sendCommand]);
 
@@ -267,7 +269,7 @@ export function useDashboardControl(
       } catch (error) {
         console.error("Light slider failed:", error);
         setLightDraft(values.lightIntensity);
-        window.alert("Không thể cập nhật độ sáng đèn.");
+        notify.error("Không thể cập nhật độ sáng đèn.");
       }
     },
     [feedByCategory, getDeviceValues, requestManualMode, sendCommand],
@@ -289,7 +291,7 @@ export function useDashboardControl(
       );
     } catch (error) {
       console.error("Fan toggle failed:", error);
-      window.alert("Không thể gửi lệnh điều khiển quạt.");
+      notify.error("Không thể gửi lệnh điều khiển quạt.");
     }
   }, [feedByCategory, getDeviceValues, requestManualMode, sendCommand]);
 
@@ -311,7 +313,7 @@ export function useDashboardControl(
       } catch (error) {
         console.error("Fan slider failed:", error);
         setFanDraft(values.fanSpeed);
-        window.alert("Không thể cập nhật tốc độ quạt.");
+        notify.error("Không thể cập nhật tốc độ quạt.");
       }
     },
     [feedByCategory, getDeviceValues, requestManualMode, sendCommand],

@@ -47,23 +47,26 @@ export function useFeeds() {
     }, [fetchFeeds]);
 
     const updateFeeds = useCallback(async (newFeeds: Feed) => {
-        try {
-            const response = await apiClient.put(`/feed`,{
-                feed_id: newFeeds.feed_id,
-                feed_key: newFeeds.feed_key,
-                category: newFeeds.category
-            });
-            console.log("Updated feed:", response.data);
-            setFeedsData(prev =>
-                prev?.map(feed => feed.feed_id === newFeeds.feed_id ? newFeeds : feed) || null
-            );
-            return response.data;
-        } catch (err: unknown) {
-            const msg = getErrorMessage(err, "Something went wrong");
-            setError(msg);
-            return null;
-        }
-    }, []);
+    try {
+        const response = await apiClient.put(`/feed`,{
+            feed_id: newFeeds.feed_id,
+            feed_key: newFeeds.feed_key,
+            category: newFeeds.category
+        });
+        
+        setFeedsData(prevFeeds => 
+            prevFeeds?.map(feed => feed.feed_id === newFeeds.feed_id ? newFeeds : feed) || null
+        );
+        
+        return response.data;
+    } catch (err: any) {
+        const msg = err.response?.data?.detail || err.message || "Something went wrong";
+        setError(msg);
+        
+        
+        return null;
+    }
+}, []);
 
     const deleteFeed = useCallback(async (feedId: string) => {
         try {
@@ -79,7 +82,6 @@ export function useFeeds() {
 
     const addNewFeed = async (data: { type: FeedCategory; key: string }) => {
         try {
-            console.log("Adding new feed with data:", data);
             if(feedsData?.some(feed => feed.category === data.type)) {
                 return false;
             }

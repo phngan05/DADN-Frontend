@@ -1,6 +1,7 @@
 import { useDeviceControl } from "../hooks/useDeviceControl";
 import DoorPasswordModal from "./door-password";
 import ChangePasswordModal from "./change-password";
+import {notify} from '@/src/utils/notify';
 import FaceUnlockModal from "./face-unlock";
 import { useEffect, useState } from "react";
 
@@ -24,25 +25,25 @@ export default function DoorSetting({
     const handleChangePassword = async (oldPassword: string, newPassword: string) => {
         const response = await verifyPassword(oldPassword);
         if(response){
-            updatePassword(oldPassword, newPassword);
-        setActiveView("password");
-            alert("Change Password successfully!")
+          updatePassword(oldPassword, newPassword);
+          setActiveView("password");
+          notify.success("Change Password successfully!");
+
         }
         else{
-            alert("Incorrect old password!");
+            notify.error("Incorrect old password!");
         }
 
     };
     const handleOpenDoor = async (inputPassword: string) => {
       const response = await verifyPassword(inputPassword);
-      console.log("Response: ", response)
       if(response){
         await updateStatus("servo", 1);
-        alert("Open door successfully!");
+        notify.success("Open door successfully!");
 
       }
       else{
-        alert("Incorrect password!");
+        notify.error("Incorrect password!");
       }
       onClose();
     };
